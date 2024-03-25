@@ -2,7 +2,7 @@
 name: Incorrect Testcase
 about: Create an issue for an incorrect testcase
 title: 'Issue with testcase: [testcase-name]'
-labels: incorrect-testcase
+labels: incorrect-testcase, new-testcase
 assignees: ''
 
 ---
