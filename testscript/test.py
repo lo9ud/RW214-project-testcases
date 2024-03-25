@@ -388,10 +388,7 @@ def test(args: argparse.Namespace):
     print("-" * term_width)
     
 def validate(args):
-    proj_dir = Path(args.proj)
     testcase_dir = Path("./testcases")
-    if not proj_dir.exists():
-        raise FileNotFoundError("Project directory not found")
     good_testcases : list[Testcase] = []
     bad_testcases : list[Testcase] = []
     for testcase_folder in testcase_dir.iterdir():
