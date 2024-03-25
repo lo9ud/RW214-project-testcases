@@ -12,6 +12,7 @@ import subprocess
 TABULATE_ENABLED: Final[bool] = False
 try:
     from tabulate import tabulate
+
     def _tabulate(tabular_data, *args, **kwargs):
         return tabulate(tabular_data, tablefmt="fancy_grid")
 
@@ -24,6 +25,7 @@ except ImportError:
             " | ".join(f"{str(cell):<{col_widths[i]}}" for i, cell in enumerate(row))
             for row in tabular_data
         )
+
 
 def ex_v_fd(ex: str, fd: str):
     class bcolors:
@@ -58,6 +60,7 @@ def ex_v_fd(ex: str, fd: str):
             )
 
     return get_match(ex, fd)
+
 
 class Direction(enum.Enum):
     T2B = enum.auto()
@@ -99,13 +102,13 @@ class Testcase:
                 ],
                 tablefmt="fancy_grid",
             )
-            
+
         def get_status(self):
             if self.recieved.strip() == self.expected.strip():
                 return Status.PASSED
             else:
                 return Status.FAILED
-            
+
         def get_diff(self):
             return ex_v_fd(self.expected, self.recieved)
 
@@ -216,7 +219,7 @@ def test(args: argparse.Namespace):
     testcase_dir = Path("./testcases")
     if not proj_dir.exists():
         raise FileNotFoundError("Project directory not found")
-    testcases : list[Testcase] = []
+    testcases: list[Testcase] = []
     for testcase_folder in testcase_dir.iterdir():
         if not testcase_folder.is_dir():
             continue
@@ -241,7 +244,7 @@ def test(args: argparse.Namespace):
         except Exception as e:
             print(f"Skipping {testcase_folder}: {e}")
             continue
-        
+
     # Get testcase stats
     t2b = 0
     b2t = 0
@@ -252,52 +255,62 @@ def test(args: argparse.Namespace):
             t2b += 1
         else:
             b2t += 1
-            
+
         if testcase.level not in levels:
             levels[testcase.level] = []
         levels[testcase.level].append(testcase)
-        
+
         for tag in testcase.tags:
             if tag not in tags:
                 tags[tag] = []
             tags[tag].append(testcase)
-            
+
     term_width = os.get_terminal_size().columns - 1
     print(f"Found {len(testcases)} testcases")
-    print(_tabulate(
-        [
-            ["T2B", t2b],
-            ["B2T", b2t],
-            *[["Level " + level, len(testcases)] for level, testcases in levels.items()],
-            *[["Tag " + tag, len(testcases)] for tag, testcases in tags.items()],
-            ["Total", len(testcases)],
-        ],
-    ))
-    
+    print(
+        _tabulate(
+            [
+                ["T2B", t2b],
+                ["B2T", b2t],
+                *[
+                    ["Level " + level, len(testcases)]
+                    for level, testcases in levels.items()
+                ],
+                *[["Tag " + tag, len(testcases)] for tag, testcases in tags.items()],
+                ["Total", len(testcases)],
+            ],
+        )
+    )
+
     print("Running testcases")
     for i, testcase in enumerate(testcases):
-        print(f"\rRunning testcase {i + 1}/{len(testcases)} ({100*(i + 1)/len(testcases):.0f}%)     ", end="")
+        print(
+            f"\rRunning testcase {i + 1}/{len(testcases)} ({100*(i + 1)/len(testcases):.0f}%)     ",
+            end="",
+        )
         testcase.run(proj_dir)
     print("Done".ljust(80, " "))
-    
+
     passed = [testcase for testcase in testcases if testcase.status == Status.PASSED]
     failed = [testcase for testcase in testcases if testcase.status == Status.FAILED]
     error = [testcase for testcase in testcases if testcase.status == Status.ERROR]
-    
+
     print()
     print("-" * term_width)
     print("| Results |".center(term_width))
     print("-" * term_width)
     print()
-    print(_tabulate(
-        [
-            ["Status", "Count", "Percentage"],
-            ["Passed", len(passed), len(passed) / len(testcases) * 100],
-            ["Failed", len(failed), len(failed) / len(testcases) * 100],
-            ["Error", len(error), len(error) / len(testcases) * 100],
-            ["Total", len(testcases), 100],
-        ],
-    ))
+    print(
+        _tabulate(
+            [
+                ["Status", "Count", "Percentage"],
+                ["Passed", len(passed), len(passed) / len(testcases) * 100],
+                ["Failed", len(failed), len(failed) / len(testcases) * 100],
+                ["Error", len(error), len(error) / len(testcases) * 100],
+                ["Total", len(testcases), 100],
+            ],
+        )
+    )
     print()
     print("-" * term_width)
     print("| Breakdown |".center(term_width, "-"))
@@ -305,71 +318,180 @@ def test(args: argparse.Namespace):
     print()
     print("| By Level |".center(term_width, "-"))
     print()
-    print(_tabulate(
-        [
-            ["Level", "Passed", "Failed", "Error", "Total"],
-            *[
-                [
-                    level,
-                    len([testcase for testcase in testcases if testcase.level == level and testcase.status == Status.PASSED]),
-                    len([testcase for testcase in testcases if testcase.level == level and testcase.status == Status.FAILED]),
-                    len([testcase for testcase in testcases if testcase.level == level and testcase.status == Status.ERROR]),
-                    len([testcase for testcase in testcases if testcase.level == level]),
-                ]
-                for level in levels.keys()
+    print(
+        _tabulate(
+            [
+                ["Level", "Passed", "Failed", "Error", "Total"],
+                *[
+                    [
+                        level,
+                        len(
+                            [
+                                testcase
+                                for testcase in testcases
+                                if testcase.level == level
+                                and testcase.status == Status.PASSED
+                            ]
+                        ),
+                        len(
+                            [
+                                testcase
+                                for testcase in testcases
+                                if testcase.level == level
+                                and testcase.status == Status.FAILED
+                            ]
+                        ),
+                        len(
+                            [
+                                testcase
+                                for testcase in testcases
+                                if testcase.level == level
+                                and testcase.status == Status.ERROR
+                            ]
+                        ),
+                        len(
+                            [
+                                testcase
+                                for testcase in testcases
+                                if testcase.level == level
+                            ]
+                        ),
+                    ]
+                    for level in levels.keys()
+                ],
             ],
-        ],
-    ))
+        )
+    )
     print()
     print("| By Tag |".center(term_width, "-"))
     print()
-    print(_tabulate(
-        [
-            ["Tag", "Passed", "Failed", "Error", "Total"],
-            *[
-                [
-                    tag,
-                    len([testcase for testcase in testcases if tag in testcase.tags and testcase.status == Status.PASSED]),
-                    len([testcase for testcase in testcases if tag in testcase.tags and testcase.status == Status.FAILED]),
-                    len([testcase for testcase in testcases if tag in testcase.tags and testcase.status == Status.ERROR]),
-                    len([testcase for testcase in testcases if tag in testcase.tags]),
-                ]
-                for tag in tags.keys()
+    print(
+        _tabulate(
+            [
+                ["Tag", "Passed", "Failed", "Error", "Total"],
+                *[
+                    [
+                        tag,
+                        len(
+                            [
+                                testcase
+                                for testcase in testcases
+                                if tag in testcase.tags
+                                and testcase.status == Status.PASSED
+                            ]
+                        ),
+                        len(
+                            [
+                                testcase
+                                for testcase in testcases
+                                if tag in testcase.tags
+                                and testcase.status == Status.FAILED
+                            ]
+                        ),
+                        len(
+                            [
+                                testcase
+                                for testcase in testcases
+                                if tag in testcase.tags
+                                and testcase.status == Status.ERROR
+                            ]
+                        ),
+                        len(
+                            [testcase for testcase in testcases if tag in testcase.tags]
+                        ),
+                    ]
+                    for tag in tags.keys()
+                ],
             ],
-        ],
-    ))
+        )
+    )
     print()
     print("| By Direction |".center(term_width, "-"))
     print()
-    print(_tabulate(
-        [
-            ["Direction", "Passed", "Failed", "Error", "Total"],
+    print(
+        _tabulate(
             [
-                "T2B",
-                len([testcase for testcase in testcases if testcase.direction == Direction.T2B and testcase.status == Status.PASSED]),
-                len([testcase for testcase in testcases if testcase.direction == Direction.T2B and testcase.status == Status.FAILED]),
-                len([testcase for testcase in testcases if testcase.direction == Direction.T2B and testcase.status == Status.ERROR]),
-                t2b,
+                ["Direction", "Passed", "Failed", "Error", "Total"],
+                [
+                    "T2B",
+                    len(
+                        [
+                            testcase
+                            for testcase in testcases
+                            if testcase.direction == Direction.T2B
+                            and testcase.status == Status.PASSED
+                        ]
+                    ),
+                    len(
+                        [
+                            testcase
+                            for testcase in testcases
+                            if testcase.direction == Direction.T2B
+                            and testcase.status == Status.FAILED
+                        ]
+                    ),
+                    len(
+                        [
+                            testcase
+                            for testcase in testcases
+                            if testcase.direction == Direction.T2B
+                            and testcase.status == Status.ERROR
+                        ]
+                    ),
+                    t2b,
+                ],
+                [
+                    "B2T",
+                    len(
+                        [
+                            testcase
+                            for testcase in testcases
+                            if testcase.direction == Direction.B2T
+                            and testcase.status == Status.PASSED
+                        ]
+                    ),
+                    len(
+                        [
+                            testcase
+                            for testcase in testcases
+                            if testcase.direction == Direction.B2T
+                            and testcase.status == Status.FAILED
+                        ]
+                    ),
+                    len(
+                        [
+                            testcase
+                            for testcase in testcases
+                            if testcase.direction == Direction.B2T
+                            and testcase.status == Status.ERROR
+                        ]
+                    ),
+                    b2t,
+                ],
             ],
-            [
-                "B2T",
-                len([testcase for testcase in testcases if testcase.direction == Direction.B2T and testcase.status == Status.PASSED]),
-                len([testcase for testcase in testcases if testcase.direction == Direction.B2T and testcase.status == Status.FAILED]),
-                len([testcase for testcase in testcases if testcase.direction == Direction.B2T and testcase.status == Status.ERROR]),
-                b2t,
-            ],
-        ],
-    ))
+        )
+    )
     if args.verbose == 1:
         print()
         print("| Details |".center(term_width, "-"))
         print()
-        print(_tabulate(
-            [
-                ["Name", "Description", "Level", "Tags", "Status"],
-                *[[testcase.name, testcase.description, testcase.level, testcase.tags, testcase.status] for testcase in testcases],
-            ],
-        ))
+        print(
+            _tabulate(
+                [
+                    ["Name", "Description", "Level", "Tags", "Status"],
+                    *[
+                        [
+                            testcase.name,
+                            testcase.description,
+                            testcase.level,
+                            testcase.tags,
+                            testcase.status,
+                        ]
+                        for testcase in testcases
+                    ],
+                ],
+            )
+        )
         print()
     elif args.verbose >= 2:
         print("-" * term_width)
@@ -384,39 +506,50 @@ def test(args: argparse.Namespace):
             print(f"Status: {testcase.status.name}")
             print(testcase.result)
             print()
-                
+
     print("-" * term_width)
-    
+
+
 def validate(args):
     testcase_dir = Path("./testcases")
-    good_testcases : list[Testcase] = []
-    bad_testcases : list[Testcase] = []
+    good_testcases: list[Testcase] = []
+    bad_testcases: list[Testcase] = []
     for testcase_folder in testcase_dir.iterdir():
         if not testcase_folder.is_dir():
             continue
         try:
-            if not (any(
-                [
-                    (testcase_folder / "input.txt").exists() and (testcase_folder / "output.txt").exists(),
-                    (testcase_folder / "input.brf").exists() and (testcase_folder / "output.brf").exists(),
-                ]
-            ) and (testcase_folder / "manifest.json").exists()):
-            
+            if not (
+                (
+                    (
+                        (testcase_folder / "input.txt").exists()
+                        and (testcase_folder / "output.txt").exists()
+                    )
+                    or (
+                        (testcase_folder / "input.brf").exists()
+                        and (testcase_folder / "output.brf").exists()
+                    )
+                )
+                and (testcase_folder / "manifest.json").exists()
+            ):
+
                 raise FileNotFoundError("Invalid testcase structure, missing files")
             good_testcases.append(Testcase(testcase_folder))
         except Exception as e:
             print(f"Bad testcase found: {testcase_folder}: {e}")
             bad_testcases.append(Testcase(testcase_folder))
             continue
-    print(_tabulate(
-        [
-            ["Good testcases", len(good_testcases)],
-            ["Bad testcases", len(bad_testcases)],
-            ["Total", len(good_testcases) + len(bad_testcases)],
-        ],
-    ))
+    print(
+        _tabulate(
+            [
+                ["Good testcases", len(good_testcases)],
+                ["Bad testcases", len(bad_testcases)],
+                ["Total", len(good_testcases) + len(bad_testcases)],
+            ],
+        )
+    )
     if bad_testcases:
         sys.exit(1)
+
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -430,9 +563,9 @@ if __name__ == "__main__":
         action="version",
         version="%(prog)s 0.1",
     )
-    
+
     subparsers = parser.add_subparsers(help="Action", dest="action")
-    
+
     test_parser = subparsers.add_parser("test", help="Run tests")
     test_parser.add_argument("proj", type=str, help="project directory")
     test_parser.add_argument(
@@ -442,9 +575,8 @@ if __name__ == "__main__":
         help="Pretty print the output",
     )
 
-
     validate_parser = subparsers.add_parser("validate", help="Validate testcases")
-    
+
     args = parser.parse_args()
     if args.action == "test":
         test(args)
