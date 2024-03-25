@@ -39,22 +39,23 @@ my-simple-testcase/
 mainfest.json:
 ```json 
 {
-  "name": "My Simple Testcase",
-  "description": "A simple testcase to test the translation.",
-  "direction": "braille-to-afrikaans",
-  "level": "1.1",
-  "tags": ["text"]
+    "$schema": "../schema.json",
+    "name": "My Simple Testcase",
+    "description": "This is a simple testcase",
+    "level": "1.0",
+    "direction": "afrikaans-to-braille",
+    "tags": ["text"]
 }
 ```
 
 input.txt:
 ```
-Dit is warm
+dit is warm
 ```
 
 output.brf:
 ```
-6-145-24-2345 24-234 2456-1-1235-134
+145-24-2345 24-234 2456-1-1235-134
 ```
 
 ## Contributing
