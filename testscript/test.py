@@ -522,11 +522,11 @@ def validate(args):
                 (
                     (
                         (testcase_folder / "input.txt").exists()
-                        and (testcase_folder / "output.txt").exists()
+                        and (testcase_folder / "output.brf").exists()
                     )
                     or (
                         (testcase_folder / "input.brf").exists()
-                        and (testcase_folder / "output.brf").exists()
+                        and (testcase_folder / "output.txt").exists()
                     )
                 )
                 and (testcase_folder / "manifest.json").exists()
