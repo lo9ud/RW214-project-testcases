@@ -25,8 +25,6 @@ except ImportError:
             for row in tabular_data
         )
 
-VERBOSITY = 0
-
 def ex_v_fd(ex: str, fd: str):
     class bcolors:
         ENDC = "\033[0m"
@@ -213,8 +211,7 @@ class Testcase:
         results_path.unlink()
 
 
-def main(args: argparse.Namespace):
-    VERBOSITY = args.verbose
+def test(args: argparse.Namespace):
     proj_dir = Path(args.proj)
     testcase_dir = Path("./testcases")
     if not proj_dir.exists():
@@ -363,17 +360,18 @@ def main(args: argparse.Namespace):
             ],
         ],
     ))
-    print()
-    print("| Details |".center(term_width, "-"))
-    print()
-    print(_tabulate(
-        [
-            ["Name", "Description", "Level", "Tags", "Status"],
-            *[[testcase.name, testcase.description, testcase.level, testcase.tags, testcase.status] for testcase in testcases],
-        ],
-    ))
-    print()
-    if args.verbose:
+    if args.verbose == 1:
+        print()
+        print("| Details |".center(term_width, "-"))
+        print()
+        print(_tabulate(
+            [
+                ["Name", "Description", "Level", "Tags", "Status"],
+                *[[testcase.name, testcase.description, testcase.level, testcase.tags, testcase.status] for testcase in testcases],
+            ],
+        ))
+        print()
+    elif args.verbose >= 2:
         print("-" * term_width)
         print("| Verbose |".center(term_width))
         print("-" * term_width)
@@ -389,27 +387,67 @@ def main(args: argparse.Namespace):
                 
     print("-" * term_width)
     
-
+def validate(args):
+    proj_dir = Path(args.proj)
+    testcase_dir = Path("./testcases")
+    if not proj_dir.exists():
+        raise FileNotFoundError("Project directory not found")
+    good_testcases : list[Testcase] = []
+    bad_testcases : list[Testcase] = []
+    for testcase_folder in testcase_dir.iterdir():
+        if not testcase_folder.is_dir():
+            continue
+        try:
+            if not (any(
+                [
+                    (testcase_folder / "input.txt").exists() and (testcase_folder / "output.txt").exists(),
+                    (testcase_folder / "input.brf").exists() and (testcase_folder / "output.brf").exists(),
+                ]
+            ) and (testcase_folder / "manifest.json").exists()):
+            
+                raise FileNotFoundError("Invalid testcase structure, missing files")
+            good_testcases.append(Testcase(testcase_folder))
+        except Exception as e:
+            print(f"Bad testcase found: {testcase_folder}: {e}")
+            bad_testcases.append(Testcase(testcase_folder))
+            continue
+    print(_tabulate(
+        [
+            ["Good testcases", len(good_testcases)],
+            ["Bad testcases", len(bad_testcases)],
+            ["Total", len(good_testcases) + len(bad_testcases)],
+        ],
+    ))
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Test script", epilog="Example: python test.py /path/to/project"
     )
-
-    parser.add_argument("proj", type=str, help="project directory")
     parser.add_argument(
-        "-v", "--verbose", action="store_true", help="Increase output verbosity"
+        "-v", "--verbose", action="count", help="Increase output verbosity"
     )
     parser.add_argument(
         "--version",
         action="version",
         version="%(prog)s 0.1",
     )
-    parser.add_argument(
+    
+    subparsers = parser.add_subparsers(help="Action", dest="action")
+    
+    test_parser = subparsers.add_parser("test", help="Run tests")
+    test_parser.add_argument("proj", type=str, help="project directory")
+    test_parser.add_argument(
         "-p",
         "--pretty-print",
         action=argparse.BooleanOptionalAction,
         help="Pretty print the output",
     )
+
+
+    validate_parser = subparsers.add_parser("validate", help="Validate testcases")
+    
     args = parser.parse_args()
-    main(args)
+    if args.action == "test":
+        test(args)
+    elif args.action == "validate":
+        validate(args)
