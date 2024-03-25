@@ -62,4 +62,8 @@ output.brf:
 
 Please create a PR with your proposed testcases. The testcases will be reviewed and merged if they meet the requirements. You may also open an issue to discuss the testcase before creating a PR, or upload it there if you do not know how to create a PR.
 
-If an issue is found with a testcase, please create an issue with the testcase name and a description of the issue, using the 
+If an issue is found with a testcase, please create an issue with the testcase name and a description of the issue, using the issue tracker.
+
+# WARNING
+
+DO NOT PUT ANYTHING HERE WHICH COULD BE CONSIDERED PLAGIARISM. YOU WILL BE PERMANENTLY PREVENTED FROM CONTRIBUTING, YOUR CHANGES WILL BE ROLLED BACK< ADN YOU WILL BE REPORTED TO THE LECTURER!
