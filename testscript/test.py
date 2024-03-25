@@ -3,10 +3,10 @@ import difflib
 import enum
 import os
 from pathlib import Path
+import sys
 from typing import Final
 import json
 import subprocess
-import tempfile
 
 
 TABULATE_ENABLED: Final[bool] = False
@@ -418,6 +418,8 @@ def validate(args):
             ["Total", len(good_testcases) + len(bad_testcases)],
         ],
     ))
+    if bad_testcases:
+        sys.exit(1)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
