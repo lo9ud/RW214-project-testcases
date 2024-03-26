@@ -1,7 +1,5 @@
 import difflib
 import enum
-from testcase import Testcase
-from table_maker import TableMaker
 
 class Direction(enum.Enum):
     T2B = enum.auto()

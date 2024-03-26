@@ -5,7 +5,7 @@ from table_maker import TableMaker
 from common import Status, Direction, ex_v_fd
 import os
 
-from testscript.testerror import TestError
+from testerror import TestError
 
 
 class Testcase:
