@@ -82,7 +82,7 @@ class Testcase:
             raise TestError("Duplicate tags")
         if not all(x in ALLOWED_TAGS for x in self.tags):
             raise TestError("Invalid tags")
-        
+
         # check files
         # check for valid root
         if not self.root.exists():
@@ -91,16 +91,43 @@ class Testcase:
         contents = list(path.name for path in self.root.iterdir() if path.is_file())
         if "manifest.json" not in contents:
             raise TestError("Manifest file not found")
+        else:
+            with open(self.root / "manifest.json", "r") as output_file:
+                try:
+                    json.load(output_file)
+                except json.JSONDecodeError:
+                    raise TestError("Invalid manifest file")
+                output_file.seek(0)
+                if not output_file.read().strip():
+                    raise TestError("Empty manifest file")
+
         if self.direction == Direction.T2B:
+            in_name = "input.txt"
+            out_name = "output.brf"
             if "input.txt" not in contents:
                 raise TestError("Input file 'input.txt' not found for direction 't2b'")
             if "output.brf" not in contents:
-                raise TestError("Output file 'output.brf' not found for direction 't2b'")
+                raise TestError(
+                    "Output file 'output.brf' not found for direction 't2b'"
+                )
         else:
+            in_name = "input.brf"
+            out_name = "output.txt"
             if "input.brf" not in contents:
                 raise TestError("Input file 'input.brf' not found for direction 'b2t'")
             if "output.txt" not in contents:
-                raise TestError("Output file 'output.txt' not found for direction 'b2t'")
+                raise TestError(
+                    "Output file 'output.txt' not found for direction 'b2t'"
+                )
+
+        with (
+            open(self.root / in_name, "r") as input_file,
+            open(self.root / out_name, "r") as output_file,
+        ):
+            _in = input_file.read()
+            _out = output_file.read()
+            if not _in.strip() or not _out.strip():
+                raise TestError("Input or output file empty")
 
     def run(self, proj_dir: Path):
         input_file = "input.txt" if self.direction == Direction.T2B else "input.brf"
@@ -158,7 +185,7 @@ class TestSet:
     def __init__(self, testcases: list[Testcase] = []) -> None:
         self.testcases = testcases
         self.complete = False
-        
+
     def add(self, testcase: Testcase):
         if self.complete:
             raise ValueError("Test set complete")
@@ -190,7 +217,7 @@ class TestSet:
                 if tag not in tags:
                     tags[tag] = []
                 tags[tag].append(testcase)
-                
+
         return TableMaker(
             [
                 ["Type", "Count"],
@@ -204,25 +231,25 @@ class TestSet:
                         for level, _testcases in levels.items()
                     ],
                     *[
-                        ["Tag \'" + tag + "\'", len(_testcases)]
+                        ["Tag '" + tag + "'", len(_testcases)]
                         for tag, _testcases in tags.items()
                     ],
                     ["Total", len(self.testcases)],
                 ]
-                if verbosity> 0
+                if verbosity > 0
                 else []
             ),
         )
-    
+
     def __iter__(self):
         return iter(self.testcases)
-    
+
     def __len__(self):
         return len(self.testcases)
-    
+
     def __getitem__(self, index):
         return self.testcases[index]
-    
+
     def results(self, verbosity):
         term_width = os.get_terminal_size().columns - 1
         ret = []
@@ -244,27 +271,47 @@ class TestSet:
                 if tag not in tags:
                     tags[tag] = []
                 tags[tag].append(testcase)
-        
-        passed = [testcase for testcase in self.testcases if testcase.status == Status.PASSED]
-        failed = [testcase for testcase in self.testcases if testcase.status == Status.FAILED]
-        error = [testcase for testcase in self.testcases if testcase.status == Status.ERROR]
+
+        passed = [
+            testcase for testcase in self.testcases if testcase.status == Status.PASSED
+        ]
+        failed = [
+            testcase for testcase in self.testcases if testcase.status == Status.FAILED
+        ]
+        error = [
+            testcase for testcase in self.testcases if testcase.status == Status.ERROR
+        ]
 
         ret += [("\n")]
         ret += [("-" * term_width)]
         ret += [("| Results |".center(term_width))]
         ret += [("-" * term_width)]
         ret += [("\n")]
-        ret += [(
-            TableMaker(
-                [
-                    ["Status", "Count", "Percentage"],
-                    ["Passed", len(passed), f"{len(passed) / len(self.testcases) * 100:.0f}%"],
-                    ["Failed", len(failed), f"{len(failed) / len(self.testcases) * 100:.0f}%"],
-                    ["Error", len(error), f"{len(error) / len(self.testcases) * 100:.0f}%"],
-                    ["Total", len(self.testcases), "100%"],
-                ],
+        ret += [
+            (
+                TableMaker(
+                    [
+                        ["Status", "Count", "Percentage"],
+                        [
+                            "Passed",
+                            len(passed),
+                            f"{len(passed) / len(self.testcases) * 100:.0f}%",
+                        ],
+                        [
+                            "Failed",
+                            len(failed),
+                            f"{len(failed) / len(self.testcases) * 100:.0f}%",
+                        ],
+                        [
+                            "Error",
+                            len(error),
+                            f"{len(error) / len(self.testcases) * 100:.0f}%",
+                        ],
+                        ["Total", len(self.testcases), "100%"],
+                    ],
+                )
             )
-        )]
+        ]
         ret += [("\n")]
         ret += [("-" * term_width)]
         ret += [("| Breakdown |".center(term_width, "-"))]
@@ -272,72 +319,130 @@ class TestSet:
         ret += [("\n")]
         ret += [("| By Level |".center(term_width, "-"))]
         ret += [("\n")]
-        ret += [(
-            TableMaker(
-                [
-                    ["Level", "Passed", "Failed", "Error", "Total"],
-                    *[
-                        [
-                            level,
-                            len(
-                                [
-                                    testcase
-                                    for testcase in self.testcases
-                                    if testcase.level == level
-                                    and testcase.status == Status.PASSED
-                                ]
-                            ),
-                            len(
-                                [
-                                    testcase
-                                    for testcase in self.testcases
-                                    if testcase.level == level
-                                    and testcase.status == Status.FAILED
-                                ]
-                            ),
-                            len(
-                                [
-                                    testcase
-                                    for testcase in self.testcases
-                                    if testcase.level == level
-                                    and testcase.status == Status.ERROR
-                                ]
-                            ),
-                            len(
-                                [
-                                    testcase
-                                    for testcase in self.testcases
-                                    if testcase.level == level
-                                ]
-                            ),
-                        ]
-                        for level in levels.keys()
-                    ],
+        ret += [
+            (
+                TableMaker(
                     [
-                        "Total",
-                        len(passed),
-                        len(failed),
-                        len(error),
-                        len(self.testcases),
-                    ]
-                ],
+                        ["Level", "Passed", "Failed", "Error", "Total"],
+                        *[
+                            [
+                                level,
+                                len(
+                                    [
+                                        testcase
+                                        for testcase in self.testcases
+                                        if testcase.level == level
+                                        and testcase.status == Status.PASSED
+                                    ]
+                                ),
+                                len(
+                                    [
+                                        testcase
+                                        for testcase in self.testcases
+                                        if testcase.level == level
+                                        and testcase.status == Status.FAILED
+                                    ]
+                                ),
+                                len(
+                                    [
+                                        testcase
+                                        for testcase in self.testcases
+                                        if testcase.level == level
+                                        and testcase.status == Status.ERROR
+                                    ]
+                                ),
+                                len(
+                                    [
+                                        testcase
+                                        for testcase in self.testcases
+                                        if testcase.level == level
+                                    ]
+                                ),
+                            ]
+                            for level in levels.keys()
+                        ],
+                        [
+                            "Total",
+                            len(passed),
+                            len(failed),
+                            len(error),
+                            len(self.testcases),
+                        ],
+                    ],
+                )
             )
-        )]
+        ]
         ret += [("\n")]
         ret += [("| By Tag |".center(term_width, "-"))]
         ret += [("\n")]
-        ret += [(
-            TableMaker(
-                [
-                    ["Tag", "Passed", "Failed", "Error", "Total"],
-                    *[
+        ret += [
+            (
+                TableMaker(
+                    [
+                        ["Tag", "Passed", "Failed", "Error", "Total"],
+                        *[
+                            [
+                                tag,
+                                len(
+                                    [
+                                        testcase
+                                        for testcase in self.testcases
+                                        if tag in testcase.tags
+                                        and testcase.status == Status.PASSED
+                                    ]
+                                ),
+                                len(
+                                    [
+                                        testcase
+                                        for testcase in self.testcases
+                                        if tag in testcase.tags
+                                        and testcase.status == Status.FAILED
+                                    ]
+                                ),
+                                len(
+                                    [
+                                        testcase
+                                        for testcase in self.testcases
+                                        if tag in testcase.tags
+                                        and testcase.status == Status.ERROR
+                                    ]
+                                ),
+                                len(
+                                    [
+                                        testcase
+                                        for testcase in self.testcases
+                                        if tag in testcase.tags
+                                    ]
+                                ),
+                            ]
+                            for tag in tags.keys()
+                        ],
                         [
-                            tag,
+                            "Total",
+                            len(passed),
+                            len(failed),
+                            len(error),
+                            len(self.testcases),
+                        ],
+                    ],
+                )
+            )
+        ]
+        ret += [("\n")]
+        ret += [("| By Direction |".center(term_width, "-"))]
+        ret += [("\n")]
+        ret += [
+            (
+                TableMaker(
+                    [
+                        ["Direction", "Passed", "Failed", "Error", "Total"],
+                        [
+                            "T2B",
                             len(
                                 [
                                     testcase
                                     for testcase in self.testcases
-                                    if tag in testcase.tags
+                                    if testcase.direction == Direction.T2B
                                     and testcase.status == Status.PASSED
                                 ]
                             ),
@@ -345,7 +450,7 @@ class TestSet:
                                 [
                                     testcase
                                     for testcase in self.testcases
-                                    if tag in testcase.tags
+                                    if testcase.direction == Direction.T2B
                                     and testcase.status == Status.FAILED
                                 ]
                             ),
@@ -353,120 +458,74 @@ class TestSet:
                                 [
                                     testcase
                                     for testcase in self.testcases
-                                    if tag in testcase.tags
+                                    if testcase.direction == Direction.T2B
                                     and testcase.status == Status.ERROR
                                 ]
                             ),
+                            len(t2b),
+                        ],
+                        [
+                            "B2T",
                             len(
-                                [testcase for testcase in self.testcases if tag in testcase.tags]
+                                [
+                                    testcase
+                                    for testcase in self.testcases
+                                    if testcase.direction == Direction.B2T
+                                    and testcase.status == Status.PASSED
+                                ]
                             ),
-                        ]
-                        for tag in tags.keys()
+                            len(
+                                [
+                                    testcase
+                                    for testcase in self.testcases
+                                    if testcase.direction == Direction.B2T
+                                    and testcase.status == Status.FAILED
+                                ]
+                            ),
+                            len(
+                                [
+                                    testcase
+                                    for testcase in self.testcases
+                                    if testcase.direction == Direction.B2T
+                                    and testcase.status == Status.ERROR
+                                ]
+                            ),
+                            len(b2t),
+                        ],
+                        [
+                            "Total",
+                            len(passed),
+                            len(failed),
+                            len(error),
+                            len(self.testcases),
+                        ],
                     ],
-                    [
-                        "Total",
-                        len(passed),
-                        len(failed),
-                        len(error),
-                        len(self.testcases),
-                    ]
-                ],
+                )
             )
-        )]
-        ret += [("\n")]
-        ret += [("| By Direction |".center(term_width, "-"))]
-        ret += [("\n")]
-        ret += [(
-            TableMaker(
-                [
-                    ["Direction", "Passed", "Failed", "Error", "Total"],
-                    [
-                        "T2B",
-                        len(
-                            [
-                                testcase
-                                for testcase in self.testcases
-                                if testcase.direction == Direction.T2B
-                                and testcase.status == Status.PASSED
-                            ]
-                        ),
-                        len(
-                            [
-                                testcase
-                                for testcase in self.testcases
-                                if testcase.direction == Direction.T2B
-                                and testcase.status == Status.FAILED
-                            ]
-                        ),
-                        len(
-                            [
-                                testcase
-                                for testcase in self.testcases
-                                if testcase.direction == Direction.T2B
-                                and testcase.status == Status.ERROR
-                            ]
-                        ),
-                        len(t2b),
-                    ],
-                    [
-                        "B2T",
-                        len(
-                            [
-                                testcase
-                                for testcase in self.testcases
-                                if testcase.direction == Direction.B2T
-                                and testcase.status == Status.PASSED
-                            ]
-                        ),
-                        len(
-                            [
-                                testcase
-                                for testcase in self.testcases
-                                if testcase.direction == Direction.B2T
-                                and testcase.status == Status.FAILED
-                            ]
-                        ),
-                        len(
-                            [
-                                testcase
-                                for testcase in self.testcases
-                                if testcase.direction == Direction.B2T
-                                and testcase.status == Status.ERROR
-                            ]
-                        ),
-                        len(b2t),
-                    ],
-                    [
-                        "Total",
-                        len(passed),
-                        len(failed),
-                        len(error),
-                        len(self.testcases),
-                    ]
-                ],
-            )
-        )]
+        ]
         if 0 < verbosity <= 1:
             ret += [("\n")]
             ret += [("| Details |".center(term_width, "-"))]
             ret += [("\n")]
-            ret += [(
-                TableMaker(
-                    [
-                        ["Name", "Description", "Level", "Tags", "Status"],
-                        *[
-                            [
-                                testcase.name,
-                                testcase.description,
-                                testcase.level,
-                                testcase.tags,
-                                testcase.status.name,
-                            ]
-                            for testcase in self.testcases
+            ret += [
+                (
+                    TableMaker(
+                        [
+                            ["Name", "Description", "Level", "Tags", "Status"],
+                            *[
+                                [
+                                    testcase.name,
+                                    testcase.description,
+                                    testcase.level,
+                                    testcase.tags,
+                                    testcase.status.name,
+                                ]
+                                for testcase in self.testcases
+                            ],
                         ],
-                    ],
+                    )
                 )
-            )]
+            ]
             ret += [("\n")]
         elif 1 < verbosity:
             ret += [("-" * term_width)]
@@ -484,3 +543,8 @@ class TestSet:
 
         ret += [("-" * term_width)]
         return "\n".join(ret)
+
+    def validate(self):
+        for testcase in self.testcases:
+            testcase.validate()
+        return True
