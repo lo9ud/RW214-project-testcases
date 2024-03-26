@@ -3,6 +3,7 @@
   "title": "Testcase",
   "description": "A testcase manifest",
   "type": "object",
+  "required": ["name", "desc", "level", "direction", "tags"],
   "properties": {
     "name": {
       "description": "The name of the testcase",
