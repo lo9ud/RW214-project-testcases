@@ -6,7 +6,7 @@ permissions:
   contents: read
 
 jobs:
-  validate-testcases:
+  setup:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -21,5 +21,11 @@ jobs:
       - name: Install Dependencies
         run: pip install -r requirements.txt
 
-      - name: Validate
+      - name: Validate File Structure
         run: python ./testscript/test.py validate
+
+      - name: Validate Manifests
+        uses: cardinalby/schema-validator-action@v3
+        with:
+          file: 'testcases/**/manifest.json'
+          schema: 'testcases/schema.json'
