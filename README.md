@@ -60,6 +60,17 @@ options:
   -h, --help  show this help message and exit
 ```
 
+To create a template for a testcase, run `test.py create`
+
+```
+% user@machine:~$ python .\testscript\test.py create -h
+
+usage: test.py create [-h]
+
+options:
+  -h, --help  show this help message and exit
+```
+
 ### Example Testcase
 
 ```
