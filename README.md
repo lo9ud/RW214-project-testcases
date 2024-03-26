@@ -19,7 +19,7 @@ The input and output files are the Braille and Afrikaans files respectively. The
  - `level`: The level of contractions for the testcase
  - `tags`: A list of tags for the testcase.
 
-THe `$schema` key is required and should be set to `"../schema.json"`.
+The `$schema` key is required and should be set to `"../schema.json"`.
 
 ### Currently allowed tags:
  

@@ -6,7 +6,7 @@ permissions:
   contents: read
 
 jobs:
-  setup:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -27,5 +27,5 @@ jobs:
       - name: Validate Manifests
         uses: cardinalby/schema-validator-action@v3
         with:
-          file: 'testcases/**/manifest.json'
+          file: 'testcases/*/manifest.json'
           schema: 'testcases/schema.json'
