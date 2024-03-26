@@ -5,33 +5,62 @@ Shared testcases for the 2024 RW214 project.
 
 ## Usage
 
+```
+% user@machine:~$ python test.py --help
+
+usage: test.py [-h] [-v] [--version] {test,validate} ...
+
+Test script
+
+positional arguments:
+  {test,validate}  Action
+    test           Run tests
+    validate       Validate testcases
+
+options:
+  -h, --help       show this help message and exit
+  -v, --verbose    Increase output verbosity
+  --version        show program's version number and exit
+
+Example: python test.py /path/to/project
+```
+
 A testcase is a directory containing three files:
 
  - `input.[brf|txt]`: The input file.
  - `output.[brf|txt]`: The output file.
  - `manifest.json`: The manifest file.
 
-The input and output files are the Braille and Afrikaans files respectively. The manifest file contains metadata about the testcase. The manifest file is a simple json file with the following keys:
+The input and output files are the Braille and Afrikaans files respectively. The manifest file contains metadata about the testcase. Read more about the manifest file [here](./MANIFEST.md).
 
- - `name`: The name of the testcase.
- - `description`: A description of the testcase.
- - `direction`: The direction of the translation. Either `braille-to-afrikaans` or `afrikaans-to-braille`.
- - `level`: The level of contractions for the testcase
- - `tags`: A list of tags for the testcase.
+To run the tests, run `test.py test`
 
-The `$schema` key is required and should be set to `"../schema.json"`.
+```
+% user@machine:~$ python .\testscript\test.py test -h
 
-### Currently allowed tags:
- 
- - `text`: The testcase is a simple text translation.
- - `numbers`: The testcase contains numbers.
- - `punctuation`: The testcase contains punctuation.
- - `contractions`: The testcase contains contractions.
- - `long`: The testcase is long. (> 100 characters words)
+usage: test.py test [-h] [-p | --pretty-print | --no-pretty-print] proj
 
-Please ensure that testcases are correctly tagged
+positional arguments:
+  proj                  project directory
 
-### Example
+options:
+  -h, --help            show this help message and exit
+  -p, --pretty-print, --no-pretty-print
+                        Pretty print the output
+```
+
+To validate the testcases, run `test.py validate`
+
+```
+% user@machine:~$ python .\testscript\test.py validate -h
+
+usage: test.py validate [-h]
+
+options:
+  -h, --help  show this help message and exit
+```
+
+### Example Testcase
 
 ```
 my-simple-testcase/
@@ -66,6 +95,8 @@ output.brf:
 Please create a PR with your proposed testcases. The testcases will be reviewed and merged if they meet the requirements. You may also open an issue to discuss the testcase before creating a PR, or upload it there if you do not know how to create a PR.
 
 If an issue is found with a testcase, please create an issue with the testcase name and a description of the issue, using the issue tracker.
+
+Read more about contributing [here](./CONTRIBUTING.md).
 
 # WARNING
 
