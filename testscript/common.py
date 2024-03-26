@@ -1,6 +1,15 @@
 import difflib
 import enum
 
+ALLOWED_TAGS = [
+    "text",
+    "numbers",
+    "punctuation",
+    "capitalization",
+    "contractions",
+    "long"
+]
+
 class Direction(enum.Enum):
     T2B = enum.auto()
     B2T = enum.auto()
@@ -13,6 +22,12 @@ class Direction(enum.Enum):
             return Direction.B2T
         else:
             raise ValueError(f"Invalid direction: {label}")
+    
+    def to_abv(self) -> str:
+        return "t2b" if self == Direction.T2B else "b2t"
+    
+    def to_long(self) -> str:
+        return "afrikaans-to-braille" if self == Direction.T2B else "braille-to-afrikaans"
 
 class Status(enum.Enum):
     READY = enum.auto()

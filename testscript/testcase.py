@@ -2,7 +2,7 @@ from pathlib import Path
 import json
 import subprocess
 from table_maker import TableMaker
-from common import Status, Direction, ex_v_fd
+from common import ALLOWED_TAGS, Status, Direction, ex_v_fd
 import os
 
 from testerror import TestError
@@ -80,6 +80,8 @@ class Testcase:
         # check for valid tags
         if not len(set(self.tags)) == len(self.tags):
             raise TestError("Duplicate tags")
+        if not all(x in ALLOWED_TAGS for x in self.tags):
+            raise TestError("Invalid tags")
         
         # check files
         # check for valid root
@@ -202,12 +204,12 @@ class TestSet:
                         for level, _testcases in levels.items()
                     ],
                     *[
-                        ["Tag " + tag, len(_testcases)]
+                        ["Tag \'" + tag + "\'", len(_testcases)]
                         for tag, _testcases in tags.items()
                     ],
                     ["Total", len(self.testcases)],
                 ]
-                if verbosity > 0
+                if verbosity> 0
                 else []
             ),
         )

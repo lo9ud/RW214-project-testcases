@@ -1,4 +1,5 @@
 import argparse
+import json
 import os
 from pathlib import Path
 import sys
@@ -31,7 +32,7 @@ def test(args: argparse.Namespace):
             print(f"Skipping {testcase_folder}: {e}")
             continue
     
-    print(testcases.summary())
+    print(testcases.summary(verbosity=args.verbose))
 
     print("Running testcases")
     for i, testcase in enumerate(testcases):
@@ -42,7 +43,7 @@ def test(args: argparse.Namespace):
         testcase.run(proj_dir)
     print("Done".ljust(80, " "))
 
-    print(testcases.results(args.verbose))
+    print(testcases.results(verbosity=args.verbose))
 
 
 def validate(args):
@@ -63,7 +64,7 @@ def validate(args):
     if bad:
         sys.exit(1)
     else:
-        print(testcases.summary())
+        print(testcases.summary(verbosity=args.verbose))
 
 
 if __name__ == "__main__":
@@ -71,7 +72,7 @@ if __name__ == "__main__":
         description="Test script", epilog="Example: python test.py /path/to/project"
     )
     parser.add_argument(
-        "-v", "--verbose", action="count", help="Increase output verbosity"
+        "-v", "--verbose", action="count", help="Increase output verbosity", default=0
     )
     parser.add_argument(
         "--version",
@@ -89,11 +90,79 @@ if __name__ == "__main__":
         action=argparse.BooleanOptionalAction,
         help="Pretty print the output",
     )
+    test_parser.add_argument(
+        "-v", "--verbose", action="count", help="Increase output verbosity", default=0
+    )
 
     validate_parser = subparsers.add_parser("validate", help="Validate testcases")
-
+    validate_parser.add_argument(
+        "-v", "--verbose", action="count", help="Increase output verbosity", default=0
+    )
+    
+    create_parser = subparsers.add_parser("create", help="Create a new testcase")
+    create_parser.add_argument(
+        '-n', '--name', type=str, help='Name of the testcase'
+    )
+    create_parser.add_argument(
+        '-d', '--direction', type=str, help='Direction of the testcase'
+    )
+    create_parser.add_argument(
+        '-i', '--info', type=str, help='Description of the testcase'
+    )
+    create_parser.add_argument(
+        '-l', '--level', type=str, help='Level of the testcase'
+    )
+    create_parser.add_argument(
+        '-t', '--tags', type=lambda x:list(x.split(":")), help='Tags of the testcase in the format "tag1:tag2:tag3"', 
+    )
+    
     args = parser.parse_args()
-    if args.action == "test":
-        test(args)
-    elif args.action == "validate":
-        validate(args)
+    match args.action:
+        case "test":
+            test(args)
+        case "validate":
+            validate(args)
+        case "create":
+            testcase_name = args.name or input("Enter testcase name: ")
+            testcase_dir = Path("./testcases") / testcase_name
+            if testcase_dir.exists():
+                print("Testcase already exists")
+                sys.exit(1)
+            else:
+                direction = Direction.from_str(args.direction or input("Enter direction (in/out): "))
+                if direction == Direction.T2B:
+                    out_name = "output.brf"
+                    in_name = "input.txt"
+                else:
+                    out_name = "output.txt"
+                    in_name = "input.brf"
+                print(f"Creating testcase {testcase_name}")
+                print("Creating directories...")
+                os.makedirs(testcase_dir)
+                print("Creating input file...")
+                with open(testcase_dir / in_name, "w") as f:
+                    f.write("// Input goes here\n")
+                print("Creating output file...")
+                with open(testcase_dir / out_name, "w") as f:
+                    f.write("// Expected output goes here\n")
+                print("Creating manifest file...")
+                with open(testcase_dir / "manifest.json", "w") as f:
+                    json.dump(
+                        {
+                            "$schema": "../schema.json",
+                            "name": testcase_name,
+                            "desc": args.info or "Enter description here",
+                            "direction": direction.to_long(),
+                            "level": args.level or "Enter level here",
+                            "tags": args.tags or [],
+                        },
+                        f,
+                        indent=2,
+                    )
+                print("Done")
+                print(f"Testcase created at {testcase_dir}")
+                print("Please edit the input, output and manifest files as required")
+                
+        case _:
+            parser.print_help()
+            sys.exit(1)
