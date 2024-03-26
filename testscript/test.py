@@ -28,7 +28,7 @@ def test(args: argparse.Namespace):
             testcases.add(
                 Testcase(testcase_folder)
             )
-        except Exception as e:
+        except TestError as e:
             print(f"Skipping {testcase_folder}: {e}")
             continue
     
@@ -41,7 +41,7 @@ def test(args: argparse.Namespace):
             end="",
         )
         testcase.run(proj_dir)
-    print("Done".ljust(80, " "))
+    print("Done")
 
     print(testcases.results(verbosity=args.verbose))
 
@@ -70,9 +70,6 @@ def validate(args):
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
         description="Test script", epilog="Example: python test.py /path/to/project"
-    )
-    parser.add_argument(
-        "-v", "--verbose", action="count", help="Increase output verbosity", default=0
     )
     parser.add_argument(
         "--version",
@@ -117,6 +114,7 @@ if __name__ == "__main__":
     )
     
     args = parser.parse_args()
+    print(f"Verbosity: {args.verbose}")
     match args.action:
         case "test":
             test(args)

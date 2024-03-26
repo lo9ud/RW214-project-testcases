@@ -225,7 +225,7 @@ class TestSet:
     
     def results(self, verbosity):
         term_width = os.get_terminal_size().columns - 1
-        
+        ret = []
         levels = {}
         tags = {}
         t2b = []
@@ -249,30 +249,30 @@ class TestSet:
         failed = [testcase for testcase in self.testcases if testcase.status == Status.FAILED]
         error = [testcase for testcase in self.testcases if testcase.status == Status.ERROR]
 
-        print()
-        print("-" * term_width)
-        print("| Results |".center(term_width))
-        print("-" * term_width)
-        print()
-        print(
+        ret += [("\n")]
+        ret += [("-" * term_width)]
+        ret += [("| Results |".center(term_width))]
+        ret += [("-" * term_width)]
+        ret += [("\n")]
+        ret += [(
             TableMaker(
                 [
                     ["Status", "Count", "Percentage"],
-                    ["Passed", len(passed), len(passed) / len(self.testcases) * 100],
-                    ["Failed", len(failed), len(failed) / len(self.testcases) * 100],
-                    ["Error", len(error), len(error) / len(self.testcases) * 100],
-                    ["Total", len(self.testcases), 100],
+                    ["Passed", len(passed), f"{len(passed) / len(self.testcases) * 100:.0f}%"],
+                    ["Failed", len(failed), f"{len(failed) / len(self.testcases) * 100:.0f}%"],
+                    ["Error", len(error), f"{len(error) / len(self.testcases) * 100:.0f}%"],
+                    ["Total", len(self.testcases), "100%"],
                 ],
             )
-        )
-        print()
-        print("-" * term_width)
-        print("| Breakdown |".center(term_width, "-"))
-        print("-" * term_width)
-        print()
-        print("| By Level |".center(term_width, "-"))
-        print()
-        print(
+        )]
+        ret += [("\n")]
+        ret += [("-" * term_width)]
+        ret += [("| Breakdown |".center(term_width, "-"))]
+        ret += [("-" * term_width)]
+        ret += [("\n")]
+        ret += [("| By Level |".center(term_width, "-"))]
+        ret += [("\n")]
+        ret += [(
             TableMaker(
                 [
                     ["Level", "Passed", "Failed", "Error", "Total"],
@@ -313,13 +313,20 @@ class TestSet:
                         ]
                         for level in levels.keys()
                     ],
+                    [
+                        "Total",
+                        len(passed),
+                        len(failed),
+                        len(error),
+                        len(self.testcases),
+                    ]
                 ],
             )
-        )
-        print()
-        print("| By Tag |".center(term_width, "-"))
-        print()
-        print(
+        )]
+        ret += [("\n")]
+        ret += [("| By Tag |".center(term_width, "-"))]
+        ret += [("\n")]
+        ret += [(
             TableMaker(
                 [
                     ["Tag", "Passed", "Failed", "Error", "Total"],
@@ -356,13 +363,20 @@ class TestSet:
                         ]
                         for tag in tags.keys()
                     ],
+                    [
+                        "Total",
+                        len(passed),
+                        len(failed),
+                        len(error),
+                        len(self.testcases),
+                    ]
                 ],
             )
-        )
-        print()
-        print("| By Direction |".center(term_width, "-"))
-        print()
-        print(
+        )]
+        ret += [("\n")]
+        ret += [("| By Direction |".center(term_width, "-"))]
+        ret += [("\n")]
+        ret += [(
             TableMaker(
                 [
                     ["Direction", "Passed", "Failed", "Error", "Total"],
@@ -392,7 +406,7 @@ class TestSet:
                                 and testcase.status == Status.ERROR
                             ]
                         ),
-                        t2b,
+                        len(t2b),
                     ],
                     [
                         "B2T",
@@ -420,16 +434,23 @@ class TestSet:
                                 and testcase.status == Status.ERROR
                             ]
                         ),
-                        b2t,
+                        len(b2t),
                     ],
+                    [
+                        "Total",
+                        len(passed),
+                        len(failed),
+                        len(error),
+                        len(self.testcases),
+                    ]
                 ],
             )
-        )
+        )]
         if 0 < verbosity <= 1:
-            print()
-            print("| Details |".center(term_width, "-"))
-            print()
-            print(
+            ret += [("\n")]
+            ret += [("| Details |".center(term_width, "-"))]
+            ret += [("\n")]
+            ret += [(
                 TableMaker(
                     [
                         ["Name", "Description", "Level", "Tags", "Status"],
@@ -439,26 +460,27 @@ class TestSet:
                                 testcase.description,
                                 testcase.level,
                                 testcase.tags,
-                                testcase.status,
+                                testcase.status.name,
                             ]
                             for testcase in self.testcases
                         ],
                     ],
                 )
-            )
-            print()
-        elif 1 < verbosity <= 2:
-            print("-" * term_width)
-            print("| Verbose |".center(term_width))
-            print("-" * term_width)
-            print()
+            )]
+            ret += [("\n")]
+        elif 1 < verbosity:
+            ret += [("-" * term_width)]
+            ret += [("| Verbose |".center(term_width))]
+            ret += [("-" * term_width)]
+            ret += [("\n")]
             for testcase in self.testcases:
-                print(f"Testcase: {testcase.name}")
-                print(f"Description: {testcase.description}")
-                print(f"Level: {testcase.level}")
-                print(f"Tags: {testcase.tags}")
-                print(f"Status: {testcase.status.name}")
-                print(testcase.result)
-                print()
+                ret += [(f"Testcase: {testcase.name}")]
+                ret += [(f"Description: {testcase.description}")]
+                ret += [(f"Level: {testcase.level}")]
+                ret += [(f"Tags: {testcase.tags}")]
+                ret += [(f"Status: {testcase.status.name}")]
+                ret += [str(testcase.result)]
+                ret += [("\n")]
 
-        print("-" * term_width)
+        ret += [("-" * term_width)]
+        return "\n".join(ret)

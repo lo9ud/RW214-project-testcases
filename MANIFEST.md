@@ -5,6 +5,6 @@
  - `punctuation`: The testcase contains punctuation.
  - `capitalization`: The testcase contains capitalization.
  - `contractions`: The testcase contains contractions.
- - `long`: The testcase is long. (> 100 characters words)
+ - `long`: The testcase is long. (> 100 characters in total)
 
 Please ensure that testcases are correctly tagged
