@@ -53,7 +53,7 @@ class Testcase:
             with open(self.manifest, "r") as f:
                 data = json.load(f)
                 self.name = data.get("name")
-                self.description = data.get("description")
+                self.description = data.get("desc")
                 self.level = data.get("level")
                 self.direction = Direction.from_str(data.get("direction"))
                 self.tags = data.get("tags")
