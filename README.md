@@ -1,5 +1,5 @@
 # RW214-project-testcases
-
+![Testcases Valid](https://github.com/lo9ud/RW214-projec-testcases/actions/workflows/validate.yml/badge.svg?event=push)
 Shared testcases for the 2024 RW214 project.
 
 ## Usage
