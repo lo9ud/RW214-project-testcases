@@ -8,7 +8,7 @@ Shared testcases for the 2024 RW214 project.
 ```
 % user@machine:~$ python test.py --help
 
-usage: test.py [-h] [-v] [--version] {test,validate} ...
+usage: test.py [-h] [-v] [--version] {test,validate,create} ...
 
 Test script
 
@@ -16,6 +16,7 @@ positional arguments:
   {test,validate}  Action
     test           Run tests
     validate       Validate testcases
+    create         Create a new testcase
 
 options:
   -h, --help       show this help message and exit
