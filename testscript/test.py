@@ -10,7 +10,7 @@ from table_maker import TableMaker
 from testerror import TestError
 
 ##########################################################
-VERSION_NUMBER : Final[tuple[int,int,int]] = (0,1,0)
+VERSION_NUMBER : Final[tuple[int,int,int]] = (0,2,0)
 
 VERSION_STR : Final[str] = ".".join(str(x) for x in VERSION_NUMBER)
 ##########################################################
