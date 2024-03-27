@@ -1,12 +1,7 @@
-import argparse
 from pathlib import Path
-from typing import TYPE_CHECKING
-
 from testcase import Testcase, TestSet
 from testerror import TestError
-
-if TYPE_CHECKING:
-    from args import TestArgs
+from args import TestArgs
 
 
 def test(args: TestArgs):

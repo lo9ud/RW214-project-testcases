@@ -2,12 +2,8 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING
-
 from common import Direction
-
-if TYPE_CHECKING:
-    from args import CreateArgs
+from args import CreateArgs
 
 
 def create(args: CreateArgs):

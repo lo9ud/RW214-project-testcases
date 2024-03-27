@@ -1,12 +1,8 @@
 import sys
 from pathlib import Path
-from typing import TYPE_CHECKING
-
 from testcase import Testcase, TestSet
 from testerror import TestError
-
-if TYPE_CHECKING:
-    from args import ValidateArgs
+from args import ValidateArgs
 
 
 def validate(args: ValidateArgs):
