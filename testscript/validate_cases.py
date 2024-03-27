@@ -1,8 +1,9 @@
 import sys
 from pathlib import Path
+
+from args import ValidateArgs
 from testcase import Testcase, TestSet
 from testerror import TestError
-from args import ValidateArgs
 
 
 def validate(args: ValidateArgs):
@@ -20,5 +21,5 @@ def validate(args: ValidateArgs):
                 bad += 1
     if bad:
         sys.exit(1)
-    else:
+    elif args.verbose:
         print(testcases.summary(verbosity=args.verbose))

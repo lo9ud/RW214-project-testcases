@@ -1,7 +1,8 @@
 from pathlib import Path
+
+from args import TestArgs
 from testcase import Testcase, TestSet
 from testerror import TestError
-from args import TestArgs
 
 
 def test(args: TestArgs):

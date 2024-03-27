@@ -1,8 +1,9 @@
+import argparse
+
 from args import CreateArgs, TestArgs, ValidateArgs
 from create_case import create
 from test_prog import test
 from validate_cases import validate
-import argparse
 
 
 def main(args: argparse.Namespace):

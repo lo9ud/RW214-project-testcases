@@ -2,8 +2,9 @@ import json
 import os
 import sys
 from pathlib import Path
-from common import Direction
+
 from args import CreateArgs
+from common import Direction
 
 
 def create(args: CreateArgs):

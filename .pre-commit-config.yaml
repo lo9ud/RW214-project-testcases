@@ -13,3 +13,24 @@ repos:
     -   id: pretty-format-json
         types: [json]
         args: [--autofix, --indent, '2', --top-keys, "name,desc"]
+-   repo: local
+    hooks:
+    -   id: black
+        name: black
+        entry: black
+        language: system
+        types: [python]
+    -   id: isort
+        name: isort
+        entry: isort
+        language: system
+        types: [python]
+    -   id: testcase-validate
+        name: testcase-validate
+        entry: python
+        language: system
+        types: [python]
+        files: ^testcases/
+        args: [testscript, validate]
+        always_run: true
+        description: Validate testcases
