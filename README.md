@@ -8,7 +8,7 @@ Shared testcases for the 2024 RW214 project.
 ```
 % user@machine:~$ python test.py --help
 
-usage: test.py [-h] [-v] [--version] {test,validate} ...
+usage: test.py [-h] [-v] [--version] {test,validate,create} ...
 
 Test script
 
@@ -16,6 +16,7 @@ positional arguments:
   {test,validate}  Action
     test           Run tests
     validate       Validate testcases
+    create         Create a new testcase
 
 options:
   -h, --help       show this help message and exit
@@ -31,51 +32,31 @@ A testcase is a directory containing three files:
  - `output.[brf|txt]`: The output file.
  - `manifest.json`: The manifest file.
 
-The input and output files are the Braille and Afrikaans files respectively. The manifest file contains metadata about the testcase. Read more about the manifest file [here](./MANIFEST.md).
+The input and output files are the Braille and Afrikaans files. The manifest file contains metadata about the testcase. Read more about the manifest file [here](./MANIFEST.md).
 
 To run the tests, run `test.py test`
 
 ```
-% user@machine:~$ python .\testscript\test.py test -h
-
-usage: test.py test [-h] [-p | --pretty-print | --no-pretty-print] proj
-
-positional arguments:
-  proj                  project directory
-
-options:
-  -h, --help            show this help message and exit
-  -p, --pretty-print, --no-pretty-print
-                        Pretty print the output
+% user@machine:~$ python .\testscript\test.py test path/to/proj/dir/
 ```
 
 To validate the testcases, run `test.py validate`
 
 ```
-% user@machine:~$ python .\testscript\test.py validate -h
-
-usage: test.py validate [-h]
-
-options:
-  -h, --help  show this help message and exit
+% user@machine:~$ python .\testscript\test.py validate
 ```
 
 To create a template for a testcase, run `test.py create`
 
 ```
-% user@machine:~$ python .\testscript\test.py create -h
-
-usage: test.py create [-h]
-
-options:
-  -h, --help  show this help message and exit
+% user@machine:~$ python .\testscript\test.py create
 ```
 
 ### Example Testcase
 
 ```
 my-simple-testcase/
-├── input.brf
+├── input.txt
 ├── output.brf
 └── manifest.json
 ```
