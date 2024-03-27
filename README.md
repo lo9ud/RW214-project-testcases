@@ -80,7 +80,7 @@ my-simple-testcase/
 └── manifest.json
 ```
 mainfest.json:
-```json 
+```json
 {
     "$schema": "../schema.json",
     "name": "My Simple Testcase",

@@ -25,4 +25,4 @@ To create a PR, please follow the steps below:
  - If the PR is accepted, the changes will be merged into the main repository, and you may delete your forked repository.
  - If the PR is not accepted, you may make the necessary changes and resubmit the PR.
 
-Do not submit too many PR's, as this will make it difficult to review them. If you have multiple testcases to submit, please include them in a single PR. 
+Do not submit too many PR's, as this will make it difficult to review them. If you have multiple testcases to submit, please include them in a single PR.

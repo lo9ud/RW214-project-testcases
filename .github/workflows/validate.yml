@@ -1,6 +1,6 @@
 name: "Validate Testcases"
 
-on: 
+on:
   push:
     branches:
       - main
@@ -27,7 +27,7 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Validate File Structure
-        run: python ./testscript/test.py validate
+        run: python ./testscript/test.py validate -v
 
       - name: Validate Manifests
         uses: cardinalby/schema-validator-action@v3

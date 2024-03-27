@@ -1,5 +1,5 @@
 ### Currently allowed tags:
- 
+
  - `text`: The testcase is a simple text translation.
  - `numbers`: The testcase contains numbers.
  - `punctuation`: The testcase contains punctuation.
