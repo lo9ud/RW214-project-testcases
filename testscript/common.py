@@ -7,8 +7,9 @@ ALLOWED_TAGS = [
     "punctuation",
     "capitalization",
     "contractions",
-    "long"
+    "long",
 ]
+
 
 class Direction(enum.Enum):
     T2B = enum.auto()
@@ -22,12 +23,15 @@ class Direction(enum.Enum):
             return Direction.B2T
         else:
             raise ValueError(f"Invalid direction: {label}")
-    
+
     def to_abv(self) -> str:
         return "t2b" if self == Direction.T2B else "b2t"
-    
+
     def to_long(self) -> str:
-        return "afrikaans-to-braille" if self == Direction.T2B else "braille-to-afrikaans"
+        return (
+            "afrikaans-to-braille" if self == Direction.T2B else "braille-to-afrikaans"
+        )
+
 
 class Status(enum.Enum):
     READY = enum.auto()
@@ -36,7 +40,8 @@ class Status(enum.Enum):
     PASSED = enum.auto()
     FAILED = enum.auto()
     COMPLETE = enum.auto()
-    
+
+
 def ex_v_fd(ex: str, fd: str):
     class bcolors:
         ENDC = "\033[0m"

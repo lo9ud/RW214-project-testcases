@@ -1,6 +1,5 @@
 from typing import Final, Self
 
-
 TABULATE_ENABLED: Final[bool] = False
 try:
     from tabulate import tabulate

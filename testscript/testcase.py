@@ -1,10 +1,10 @@
-from pathlib import Path
 import json
-import subprocess
-from table_maker import TableMaker
-from common import ALLOWED_TAGS, Status, Direction, ex_v_fd
 import os
+import subprocess
+from pathlib import Path
 
+from common import ALLOWED_TAGS, Direction, Status, ex_v_fd
+from table_maker import TableMaker
 from testerror import TestError
 
 
@@ -57,22 +57,19 @@ class Testcase:
                 self.level = data.get("level")
                 self.direction = Direction.from_str(data.get("direction"))
                 self.tags = data.get("tags")
+                # check types
+                if not isinstance(self.name, str):
+                    raise TestError("Invalid name")
+                if not isinstance(self.description, str):
+                    raise TestError("Invalid description")
+                if not isinstance(self.level, str):
+                    raise TestError("Invalid level")
+                if not isinstance(self.tags, list):
+                    raise TestError("Invalid tags")
         else:
             raise FileNotFoundError("Manifest file not found")
 
     def validate(self):
-        # check types
-        if not isinstance(self.name, str):
-            raise TestError("Invalid name")
-        if not isinstance(self.description, str):
-            raise TestError("Invalid description")
-        if not isinstance(self.level, str):
-            raise TestError("Invalid level")
-        if not isinstance(self.direction, Direction):
-            raise TestError("Invalid direction")
-        if not isinstance(self.tags, list):
-            raise TestError("Invalid tags")
-
         # check for valid level
         if not 0 <= float(self.level) <= 4.1:
             raise TestError("Invalid level")
@@ -91,15 +88,16 @@ class Testcase:
         contents = list(path.name for path in self.root.iterdir() if path.is_file())
         if "manifest.json" not in contents:
             raise TestError("Manifest file not found")
-        else:
-            with open(self.root / "manifest.json", "r") as output_file:
-                try:
-                    json.load(output_file)
-                except json.JSONDecodeError:
-                    raise TestError("Invalid manifest file")
-                output_file.seek(0)
-                if not output_file.read().strip():
-                    raise TestError("Empty manifest file")
+
+        with open(self.root / "manifest.json", "r") as output_file:
+            try:
+                json.load(output_file)
+            except json.JSONDecodeError:
+                raise TestError("Invalid manifest file") from None
+
+            output_file.seek(0)
+            if not output_file.read().strip():
+                raise TestError("Empty manifest file")
 
         if self.direction == Direction.T2B:
             in_name = "input.txt"
@@ -199,10 +197,10 @@ class TestSet:
         self.complete = True
 
     def summary(self, verbosity: int = 0) -> str:
-        levels = {}
-        tags = {}
-        t2b = []
-        b2t = []
+        levels: dict[str, list[Testcase]] = {}
+        tags: dict[str, list[Testcase]] = {}
+        t2b: list[Testcase] = []
+        b2t: list[Testcase] = []
         for testcase in self.testcases:
             if testcase.direction == Direction.T2B:
                 t2b.append(testcase)
@@ -247,16 +245,16 @@ class TestSet:
     def __len__(self):
         return len(self.testcases)
 
-    def __getitem__(self, index):
+    def __getitem__(self, index: int) -> Testcase:
         return self.testcases[index]
 
-    def results(self, verbosity):
+    def results(self, verbosity: int) -> str:
         term_width = os.get_terminal_size().columns - 1
-        ret = []
-        levels = {}
-        tags = {}
-        t2b = []
-        b2t = []
+        ret: list[str] = []
+        levels: dict[str, list[Testcase]] = {}
+        tags: dict[str, list[Testcase]] = {}
+        t2b: list[Testcase] = []
+        b2t: list[Testcase] = []
         for testcase in self.testcases:
             if testcase.direction == Direction.T2B:
                 t2b.append(testcase)
