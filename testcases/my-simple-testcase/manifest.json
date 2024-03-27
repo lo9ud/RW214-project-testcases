@@ -1,8 +1,10 @@
 {
-    "$schema": "../schema.json",
-    "name": "My Simple Testcase",
-    "desc": "This is a simple testcase",
-    "level": "1.0",
-    "direction": "afrikaans-to-braille",
-    "tags": ["text"]
+  "name": "My Simple Testcase",
+  "desc": "This is a simple testcase",
+  "$schema": "../schema.json",
+  "direction": "afrikaans-to-braille",
+  "level": "1.0",
+  "tags": [
+    "text"
+  ]
 }

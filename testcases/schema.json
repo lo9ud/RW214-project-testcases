@@ -1,9 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
-  "title": "Testcase",
   "description": "A testcase manifest",
-  "type": "object",
-  "required": ["name", "desc", "level", "direction", "tags"],
   "properties": {
     "name": {
       "description": "The name of the testcase",
@@ -13,23 +10,35 @@
       "description": "A description of the testcase",
       "type": "string"
     },
+    "direction": {
+      "description": "The direction of the testcase",
+      "enum": [
+        "afrikaans-to-braille",
+        "braille-to-afrikaans"
+      ],
+      "type": "string"
+    },
     "level": {
       "description": "The level of the testcase",
       "type": "string"
     },
-    "direction": {
-      "description": "The direction of the testcase",
-      "type": "string",
-      "enum": ["afrikaans-to-braille", "braille-to-afrikaans"]
-    },
     "tags": {
       "description": "The tags of the testcase",
-      "type": "array",
       "items": {
         "type": "string"
       },
-      "uniqueItems": true,
-      "minItems": 1
+      "minItems": 1,
+      "type": "array",
+      "uniqueItems": true
     }
-  }
+  },
+  "required": [
+    "name",
+    "desc",
+    "level",
+    "direction",
+    "tags"
+  ],
+  "title": "Testcase",
+  "type": "object"
 }
