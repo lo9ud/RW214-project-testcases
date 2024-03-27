@@ -36,39 +36,19 @@ The input and output files are the Braille and Afrikaans files. The manifest fil
 To run the tests, run `test.py test`
 
 ```
-% user@machine:~$ python .\testscript\test.py test -h
-
-usage: test.py test [-h] [-p | --pretty-print | --no-pretty-print] proj
-
-positional arguments:
-  proj                  project directory
-
-options:
-  -h, --help            show this help message and exit
-  -p, --pretty-print, --no-pretty-print
-                        Pretty print the output
+% user@machine:~$ python .\testscript\test.py test path/to/proj/dir/
 ```
 
 To validate the testcases, run `test.py validate`
 
 ```
-% user@machine:~$ python .\testscript\test.py validate -h
-
-usage: test.py validate [-h]
-
-options:
-  -h, --help  show this help message and exit
+% user@machine:~$ python .\testscript\test.py validate
 ```
 
 To create a template for a testcase, run `test.py create`
 
 ```
-% user@machine:~$ python .\testscript\test.py create -h
-
-usage: test.py create [-h]
-
-options:
-  -h, --help  show this help message and exit
+% user@machine:~$ python .\testscript\test.py create 
 ```
 
 ### Example Testcase
