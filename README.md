@@ -55,7 +55,7 @@ To create a template for a testcase, run `test.py create`
 
 ```
 my-simple-testcase/
-├── input.brf
+├── input.txt
 ├── output.brf
 └── manifest.json
 ```
