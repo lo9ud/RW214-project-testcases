@@ -4,6 +4,21 @@ Please create a PR with your proposed testcases. The testcases will be reviewed 
 
 If an issue is found with a testcase, please create an issue with the testcase name and a description of the issue, using the issue tracker.
 
+## Requirements
+
+The following python packages will be required to push testcases to the repository:
+
+ - `black`
+ - `isort`
+
+To install these packages, run the following command:
+
+```bash
+pip install -r dev-requirements.txt
+```
+
+This will install the required packages.
+
 ## Creating a Testcase
 
 To create a template for a testcase, run `test.py create`
