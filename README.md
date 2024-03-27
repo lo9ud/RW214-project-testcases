@@ -31,7 +31,7 @@ A testcase is a directory containing three files:
  - `output.[brf|txt]`: The output file.
  - `manifest.json`: The manifest file.
 
-The input and output files are the Braille and Afrikaans files respectively. The manifest file contains metadata about the testcase. Read more about the manifest file [here](./MANIFEST.md).
+The input and output files are the Braille and Afrikaans files. The manifest file contains metadata about the testcase. Read more about the manifest file [here](./MANIFEST.md).
 
 To run the tests, run `test.py test`
 
