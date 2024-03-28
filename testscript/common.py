@@ -1,5 +1,8 @@
 import difflib
 import enum
+from typing import Literal
+
+COLOR_ENABLED = True
 
 ALLOWED_TAGS = set(
     [
@@ -12,6 +15,11 @@ ALLOWED_TAGS = set(
         "diacritics",
     ]
 )
+
+
+def set_color_enabled(enabled: bool) -> None:
+    global COLOR_ENABLED
+    COLOR_ENABLED = enabled  # type: ignore
 
 
 class Direction(enum.Enum):
@@ -45,36 +53,57 @@ class Status(enum.Enum):
     COMPLETE = enum.auto()
 
 
-def ex_v_fd(ex: str, fd: str):
-    class bcolors:
-        ENDC = "\033[0m"
-        RED_BACK = "\033[41m"
-        GREEN_BACK = "\033[42m"
+class bcolor(enum.Enum):
+    ENDC = "\033[0m" if COLOR_ENABLED else ""
+    RED_BACK = "\033[41m" if COLOR_ENABLED else ""
+    GREEN_BACK = "\033[42m" if COLOR_ENABLED else ""
 
+
+def colorize(text: str, color: Literal["red", "green"], omit_ends: bool = False) -> str:
+    if COLOR_ENABLED:
+        match color:
+            case "red":
+                color_code = bcolor.RED_BACK.value
+            case "green":
+                color_code = bcolor.GREEN_BACK.value
+            case _:  # type: ignore
+                raise ValueError(f"Invalid color: {color}, must be 'red' or 'green'")
+        return f"{color_code}{text}" + (bcolor.ENDC.value if not omit_ends else "")
+    else:
+        return text
+
+
+def ex_v_fd(ex: str, fd: str) -> tuple[str, str]:
     ex = ex.replace("\r\n", "\n").replace("\n", r"\n")
     fd = fd.replace("\r\n", "\n").replace("\n", r"\n")
 
     def get_match(ex: str, fd: str) -> tuple[str, str]:
-        # if len(ex) < len(fd):
-        #     ex = ex + " " * (len(fd) - len(ex))
-        # elif len(fd) < len(ex):
-        #     fd = fd + " " * (len(ex) - len(fd))
-
         matcher = difflib.SequenceMatcher()
         matcher.set_seq1(ex)
         matcher.set_seq2(fd)
         mid = matcher.find_longest_match()
         if mid.size == 0:
             return (
-                f"{bcolors.RED_BACK}{ex.ljust(max(len(ex), len(fd)))}{bcolors.ENDC}",
-                f"{bcolors.RED_BACK}{fd.ljust(max(len(ex), len(fd)))}{bcolors.ENDC}",
+                colorize(ex.ljust(max(len(ex), len(fd))), "red", omit_ends=True),
+                colorize(fd.ljust(max(len(ex), len(fd))), "red", omit_ends=True),
             )
         else:
             l_ex, l_fd = get_match(ex[: mid.a], fd[: mid.b])
             r_ex, r_fd = get_match(ex[mid.a + mid.size :], fd[mid.b + mid.size :])
             return (
-                (l_ex + bcolors.GREEN_BACK + ex[mid.a : mid.a + mid.size] + r_ex),
-                (l_fd + bcolors.GREEN_BACK + fd[mid.b : mid.b + mid.size] + r_fd),
+                (
+                    l_ex
+                    + colorize(ex[mid.a : mid.a + mid.size], "green", omit_ends=True)
+                    + r_ex
+                ),
+                (
+                    l_fd
+                    + colorize(fd[mid.b : mid.b + mid.size], "green", omit_ends=True)
+                    + r_fd
+                ),
             )
 
-    return get_match(ex, fd)
+    a, b = get_match(ex, fd)
+    if COLOR_ENABLED:
+        return (a + bcolor.ENDC.value, b + bcolor.ENDC.value)
+    return (a, b)

@@ -9,7 +9,7 @@ from common import Direction
 
 def create(args: CreateArgs):
     testcase_name = args.name or input("Enter testcase name: ")
-    testcase_dir = Path("./testcases") / testcase_name
+    testcase_dir = Path("./testcases") / (testcase_name.lower().replace(" ", "-"))
     if testcase_dir.exists():
         print("Testcase already exists")
         sys.exit(1)

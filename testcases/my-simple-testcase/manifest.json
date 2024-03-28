@@ -2,7 +2,6 @@
   "name": "My Simple Testcase",
   "desc": "This is a simple testcase",
   "$schema": "../schema.json",
-  "direction": "afrikaans-to-braille",
   "level": "1.0",
   "tags": [
     "text"

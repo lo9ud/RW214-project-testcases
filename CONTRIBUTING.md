@@ -1,20 +1,18 @@
 # Contributing
 
-Please create a PR with your proposed testcases. The testcases will be reviewed and merged if they meet the requirements. You may also open an issue to discuss the testcase before creating a PR, or upload it there if you do not know how to create a PR.
-
-If an issue is found with a testcase, please create an issue with the testcase name and a description of the issue, using the issue tracker.
+Please create a new branch for your changes and make a pull request to the `main` branch.
 
 ## Requirements
 
 The following python packages will be required to push testcases to the repository:
 
- - `black`
- - `isort`
+- `black`
+- `isort`
 
 To install these packages, run the following command:
 
 ```bash
-pip install -r dev-requirements.txt
+pip install -r requirements.txt
 ```
 
 This will install the required packages.
@@ -29,15 +27,17 @@ A GitHub account is required to make a PR. If you do not have a GitHub account, 
 
 To create a PR, please follow the steps below:
 
- - On the GitHub page [lo9ud/RW214-project-testcases](https://github.com/lo9ud/RW214-project-testcases) click on the `Fork` button to fork the repository.
- - Clone the forked repository to your local machine.
- - Make your changes.
- - Commit and push your changes to your forked repository.
- - On the GitHub page of your forked repository, click on the `Pull Request` button to create a PR.
- - Fill in the PR template and submit the PR.
- - The PR will be reviewed and merged if it meets the requirements.
-   - This will include an automated check to ensure that the testcase(s) are correctly structured.
- - If the PR is accepted, the changes will be merged into the main repository, and you may delete your forked repository.
- - If the PR is not accepted, you may make the necessary changes and resubmit the PR.
+- On the GitHub page [lo9ud/RW214-project-testcases](https://github.com/lo9ud/RW214-project-testcases).
+- Clone the repository to your local machine.
+- Create a new branch for your changes from `dev`.
+  - The branch name should be descriptive of the changes you are making in the format `dev-<testcase-name>`. i.e.) `dev-my-simple-testcase`.
+  - Create a branch using the following command: `git checkout -b dev-<testcase-name> dev`.
+- Make your changes.
+- Commit your changes to this branch.
+- On the GitHub page open you brnach and click on `Contribute` -> `Pull Request` at the top right.
+- Fill in the PR template and submit the PR.
+- The PR will be reviewed and merged if it meets the requirements.
+- If the PR is accepted, the changes will be merged into the main repository, and you may delete your forked repository.
+- If the PR is not accepted, you may make the necessary changes and resubmit the PR.
 
 Do not submit too many PR's, as this will make it difficult to review them. If you have multiple testcases to submit, please include them in a single PR.
