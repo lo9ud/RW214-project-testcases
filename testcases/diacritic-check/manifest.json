@@ -1,8 +1,7 @@
 {
-  "name": "diacritic-check",
+  "name": "Diacritic Check",
   "desc": "Checks base level diacritics, such as accents, for correct usage. No uncontracted braille is used.",
   "$schema": "../schema.json",
-  "direction": "afrikaans-to-braille",
   "level": "1.0",
   "tags": [
     "text",
