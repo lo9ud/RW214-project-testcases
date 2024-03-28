@@ -1,7 +1,6 @@
 import json
 import os
 import subprocess
-import sys
 from pathlib import Path
 
 from common import ALLOWED_TAGS, Direction, Status, ex_v_fd
