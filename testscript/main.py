@@ -3,6 +3,7 @@ import argparse
 from args import CreateArgs, TestArgs, ValidateArgs
 from common import set_color_enabled
 from create_case import create
+from table_maker import set_tabulate_enabled
 from test_prog import test
 from validate_cases import validate
 
@@ -11,6 +12,7 @@ def main(args: argparse.Namespace):
     if hasattr(args, "verbose"):
         print(f"Verbosity: {args.verbose}")
     set_color_enabled(args.color)
+    set_tabulate_enabled(args.pretty_print)
     match args.action:
         case "test":
             test(TestArgs(args))
