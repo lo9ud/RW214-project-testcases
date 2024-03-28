@@ -1,5 +1,6 @@
 {
   "$schema": "http://json-schema.org/draft-04/schema#",
+  "additionalProperties": false,
   "description": "A testcase manifest",
   "properties": {
     "name": {
@@ -10,12 +11,8 @@
       "description": "A description of the testcase",
       "type": "string"
     },
-    "direction": {
-      "description": "The direction of the testcase",
-      "enum": [
-        "afrikaans-to-braille",
-        "braille-to-afrikaans"
-      ],
+    "$schema": {
+      "description": "The schema of the testcase",
       "type": "string"
     },
     "level": {
@@ -36,7 +33,6 @@
     "name",
     "desc",
     "level",
-    "direction",
     "tags"
   ],
   "title": "Testcase",

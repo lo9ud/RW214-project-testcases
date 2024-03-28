@@ -51,6 +51,13 @@ def get_args(args: list[str]) -> argparse.Namespace:
     validate_parser.add_argument(
         "-v", "--verbose", action="count", help="Increase output verbosity", default=0
     )
+    validate_parser.add_argument(
+        "-c",
+        "--color",
+        action=argparse.BooleanOptionalAction,
+        help="Enable color in output",
+        default=True,
+    )
 
     create_parser = subparsers.add_parser("create", help="Create a new testcase")
     create_parser.add_argument("-n", "--name", type=str, help="Name of the testcase")
@@ -66,6 +73,13 @@ def get_args(args: list[str]) -> argparse.Namespace:
         "--tags",
         type=lambda x: list(x.split(":")),
         help='Tags of the testcase in the format "tag1:tag2:tag3"',
+    )
+    create_parser.add_argument(
+        "-c",
+        "--color",
+        action=argparse.BooleanOptionalAction,
+        help="Enable color in output",
+        default=True,
     )
 
     return parser.parse_args(args)
@@ -83,6 +97,7 @@ class TestArgs:
 class ValidateArgs:
     def __init__(self, args: argparse.Namespace):
         self.verbose: int = args.verbose
+        self.color: bool = args.color
 
 
 class CreateArgs:
@@ -92,3 +107,4 @@ class CreateArgs:
         self.info: str = args.info
         self.level: str = args.level
         self.tags: list[str] = args.tags
+        self.color: bool = args.color
