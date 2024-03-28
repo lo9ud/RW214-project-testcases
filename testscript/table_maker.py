@@ -4,31 +4,44 @@ TABULATE_ENABLED: Final[bool] = False
 try:
     from tabulate import tabulate
 
-    def _tabulate(tabular_data: list[list[Any]]):
+    def _tabulate(tabular_data: list[list[Any]]) -> str:  # type: ignore
         return tabulate(tabular_data, tablefmt="fancy_grid")
 
     TABULATE_ENABLED = True  # type: ignore
 except ImportError:
 
-    def _tabulate(tabular_data: list[list[Any]]):
-        col_widths = [max(len(str(cell)) for cell in col) for col in zip(*tabular_data)]
-        return "\n".join(
-            " | ".join(f"{str(cell):<{col_widths[i]}}" for i, cell in enumerate(row))
-            for row in tabular_data
+    def _tabulate(tabular_data: list[list[Any]]) -> str:  # type: ignore
+        raise ImportError(
+            "Tabulate not found, please install tabulate to use this feature."
         )
+
+    print("Tabulate not found, using custom tabulate instead.")
+
+
+def custom_tabulate(tabular_data: list[list[Any]]):
+    col_widths = [max(len(str(cell)) for cell in col) for col in zip(*tabular_data)]
+    return "\n".join(
+        " | ".join(f"{str(cell):<{col_widths[i]}}" for i, cell in enumerate(row))
+        for row in tabular_data
+    )
+
+
+def set_tabulate_enabled(enabled: bool) -> None:
+    global TABULATE_ENABLED
+    TABULATE_ENABLED = enabled  # type: ignore
 
 
 class _TableMaker:
-    def __new__(cls, tablefmt: str = "fancy_grid") -> Self:
+    def __new__(cls) -> Self:
         if not hasattr(cls, "instance"):
             cls.instance = super(_TableMaker, cls).__new__(cls)
         return cls.instance
 
-    def __init__(self, tablefmt: str = "fancy_grid"):
-        self.tablefmt: str = tablefmt
-
-    def __call__(self, tabular_data: list[list[Any]]):
-        return _tabulate(tabular_data)
+    def __call__(self, tabular_data: list[list[Any]]) -> str:
+        global TABULATE_ENABLED
+        if TABULATE_ENABLED:
+            return _tabulate(tabular_data)
+        return custom_tabulate(tabular_data)
 
 
 TableMaker: Callable[[list[list[Any]]], str] = _TableMaker()
