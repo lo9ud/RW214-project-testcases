@@ -4,44 +4,60 @@ import sys
 from pathlib import Path
 
 from args import CreateArgs
-from common import Direction
+from common import ALLOWED_TAGS
 
 
 def create(args: CreateArgs):
-    testcase_name = args.name or input("Enter testcase name: ")
+    try:
+        testcase_name: str = args.name or input("Enter testcase name: ")
+        if not args.info:
+            testcase_info: str = input("Enter testcase description: ")
+        else:
+            testcase_info = args.info
+
+        if not args.level:
+            testcase_level: str = input("Enter testcase level: ")
+        else:
+            testcase_level = args.level
+
+        if not args.tags:
+            testcase_tags: list[str] = []
+            for x in map(
+                lambda x: x.strip().lower(),
+                input("Enter testcase tags (colon separated): ").split(":"),
+            ):
+                if x not in ALLOWED_TAGS:
+                    raise ValueError(f"Invalid tag: {x}")
+                testcase_tags.append(x)
+        else:
+            testcase_tags = args.tags
+    except ValueError as e:
+        print(e)
+        sys.exit(1)
+
     testcase_dir = Path("./testcases") / (testcase_name.lower().replace(" ", "-"))
     if testcase_dir.exists():
         print("Testcase already exists")
         sys.exit(1)
     else:
-        direction = Direction.from_str(
-            args.direction or input("Enter direction (t2b/b2t): ")
-        )
-        if direction == Direction.T2B:
-            out_name = "output.brf"
-            in_name = "input.txt"
-        else:
-            out_name = "output.txt"
-            in_name = "input.brf"
         print(f"Creating testcase {testcase_name}")
         print("Creating directories...")
         os.makedirs(testcase_dir)
-        print("Creating input file...")
-        with open(testcase_dir / in_name, "w") as f:
-            f.write("// Input goes here\n")
-        print("Creating output file...")
-        with open(testcase_dir / out_name, "w") as f:
-            f.write("// Expected output goes here\n")
+        print("Creating txt file...")
+        with open(testcase_dir / "afr.txt", "w") as f:
+            f.write("// Afrikaans goes here\n")
+        print("Creating brf file...")
+        with open(testcase_dir / "brf.brf", "w") as f:
+            f.write("// Braille output goes here\n")
         print("Creating manifest file...")
         with open(testcase_dir / "manifest.json", "w") as f:
             json.dump(
                 {
                     "$schema": "../schema.json",
                     "name": testcase_name,
-                    "desc": args.info or input("Testcase description?: "),
-                    "direction": direction.to_long(),
-                    "level": args.level or input("Testcase level?: "),
-                    "tags": args.tags or [],
+                    "desc": testcase_info,
+                    "level": testcase_level,
+                    "tags": testcase_tags,
                 },
                 f,
                 indent=2,
