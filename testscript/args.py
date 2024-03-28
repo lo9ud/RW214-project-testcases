@@ -3,7 +3,7 @@ from pathlib import Path
 from typing import Final
 
 ##########################################################
-VERSION_NUMBER: Final[tuple[int, int, int]] = (0, 1, 0)
+VERSION_NUMBER: Final[tuple[int, int, int]] = (0, 3, 0)
 
 VERSION_STR: Final[str] = ".".join(str(x) for x in VERSION_NUMBER)
 ##########################################################
@@ -58,6 +58,12 @@ def get_args(args: list[str]) -> argparse.Namespace:
         help="Enable color in output",
         default=True,
     )
+    validate_parser.add_argument(
+        "-p",
+        "--pretty-print",
+        action=argparse.BooleanOptionalAction,
+        help="Pretty print the output",
+    )
 
     create_parser = subparsers.add_parser("create", help="Create a new testcase")
     create_parser.add_argument("-n", "--name", type=str, help="Name of the testcase")
@@ -80,6 +86,12 @@ def get_args(args: list[str]) -> argparse.Namespace:
         action=argparse.BooleanOptionalAction,
         help="Enable color in output",
         default=True,
+    )
+    create_parser.add_argument(
+        "-p",
+        "--pretty-print",
+        action=argparse.BooleanOptionalAction,
+        help="Pretty print the output",
     )
 
     return parser.parse_args(args)

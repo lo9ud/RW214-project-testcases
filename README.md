@@ -6,24 +6,21 @@ Shared testcases for the 2024 RW214 project.
 ## Usage
 
 ```
-% user@machine:~$ python test.py --help
-
-usage: test.py [-h] [-v] [--version] {test,validate,create} ...
+% user@machine:~$ python testscript -h
+usage: testscript [-h] [--version] {test,validate,create} ...
 
 Test script
 
 positional arguments:
-  {test,validate}  Action
-    test           Run tests
-    validate       Validate testcases
-    create         Create a new testcase
+  {test,validate,create}
+                        Action
+    test                Run tests
+    validate            Validate testcases
+    create              Create a new testcase
 
 options:
-  -h, --help       show this help message and exit
-  -v, --verbose    Increase output verbosity
-  --version        show program's version number and exit
-
-Example: python test.py /path/to/project
+  -h, --help            show this help message and exit
+  --version             show program's version number and exit
 ```
 
 A testcase is a directory containing three files:
