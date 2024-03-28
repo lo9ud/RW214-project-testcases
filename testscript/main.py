@@ -9,8 +9,6 @@ from validate_cases import validate
 
 
 def main(args: argparse.Namespace):
-    if hasattr(args, "verbose"):
-        print(f"Verbosity: {args.verbose}")
     set_color_enabled(args.color)
     set_tabulate_enabled(args.pretty_print)
     match args.action:
