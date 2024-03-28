@@ -15,7 +15,7 @@ def create(args: CreateArgs):
         sys.exit(1)
     else:
         direction = Direction.from_str(
-            args.direction or input("Enter direction (in/out): ")
+            args.direction or input("Enter direction (t2b/b2t): ")
         )
         if direction == Direction.T2B:
             out_name = "output.brf"
@@ -38,9 +38,9 @@ def create(args: CreateArgs):
                 {
                     "$schema": "../schema.json",
                     "name": testcase_name,
-                    "desc": args.info or "Enter description here",
+                    "desc": args.info or input("Testcase description?: "),
                     "direction": direction.to_long(),
-                    "level": args.level or "Enter level here",
+                    "level": args.level or input("Testcase level?: "),
                     "tags": args.tags or [],
                 },
                 f,

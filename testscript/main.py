@@ -7,7 +7,8 @@ from validate_cases import validate
 
 
 def main(args: argparse.Namespace):
-    print(f"Verbosity: {args.verbose}")
+    if hasattr(args, "verbose"):
+        print(f"Verbosity: {args.verbose}")
     match args.action:
         case "test":
             test(TestArgs(args))

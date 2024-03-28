@@ -32,6 +32,20 @@ def get_args(args: list[str]) -> argparse.Namespace:
     test_parser.add_argument(
         "-v", "--verbose", action="count", help="Increase output verbosity", default=0
     )
+    test_parser.add_argument(
+        "-t",
+        "--timeout",
+        type=int,
+        help="Timeout for each testcase in seconds",
+        default=10,
+    )
+    test_parser.add_argument(
+        "-c",
+        "--color",
+        action=argparse.BooleanOptionalAction,
+        help="Enable color in output",
+        default=True,
+    )
 
     validate_parser = subparsers.add_parser("validate", help="Validate testcases")
     validate_parser.add_argument(
@@ -62,6 +76,8 @@ class TestArgs:
         self.action: str = args.action
         self.proj: Path = Path(args.proj)
         self.verbose: int = args.verbose
+        self.timeout: int = args.timeout
+        self.color: bool = args.color
 
 
 class ValidateArgs:

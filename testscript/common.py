@@ -1,14 +1,17 @@
 import difflib
 import enum
 
-ALLOWED_TAGS = [
-    "text",
-    "numbers",
-    "punctuation",
-    "capitalization",
-    "contractions",
-    "long",
-]
+ALLOWED_TAGS = set(
+    [
+        "text",
+        "numbers",
+        "punctuation",
+        "capitalization",
+        "contractions",
+        "long",
+        "diacritics",
+    ]
+)
 
 
 class Direction(enum.Enum):

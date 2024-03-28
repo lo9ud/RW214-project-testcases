@@ -1,6 +1,7 @@
 import json
 import os
 import subprocess
+import sys
 from pathlib import Path
 
 from common import ALLOWED_TAGS, Direction, Status, ex_v_fd
@@ -14,6 +15,7 @@ class Testcase:
             self.input: str = input
             self.recieved: str = recieved
             self.expected: str = expected
+            self.err: str | None = None
 
         def __str__(self):
             return TableMaker(
@@ -47,6 +49,8 @@ class Testcase:
         if strict:
             self.validate()
         self.status: Status = Status.READY
+        self.out = ""
+        self.err = ""
 
     def import_manifest(self):
         if self.manifest.exists():
@@ -78,7 +82,7 @@ class Testcase:
         if not len(set(self.tags)) == len(self.tags):
             raise TestError("Duplicate tags")
         if not all(x in ALLOWED_TAGS for x in self.tags):
-            raise TestError("Invalid tags")
+            raise TestError("Invalid tags: " + ", ".join(set(self.tags) - ALLOWED_TAGS))
 
         # check files
         # check for valid root
@@ -127,7 +131,7 @@ class Testcase:
             if not _in.strip() or not _out.strip():
                 raise TestError("Input or output file empty")
 
-    def run(self, proj_dir: Path):
+    def run(self, proj_dir: Path, bin_dir: Path) -> subprocess.Popen[bytes]:
         input_file = "input.txt" if self.direction == Direction.T2B else "input.brf"
         output_file = "output.brf" if self.direction == Direction.T2B else "output.txt"
         results_file = (
@@ -138,45 +142,62 @@ class Testcase:
         output_path = self.root / output_file
         results_path = proj_dir / "out" / results_file
 
+        if not proj_dir.exists():
+            raise FileNotFoundError("Project directory not found")
+        if not bin_dir.exists():
+            raise FileNotFoundError("Binary directory not found")
+        if not input_path.exists():
+            raise FileNotFoundError("Input file not found")
+
+        if results_path.exists():
+            results_path.unlink()
+
         self.status = Status.RUNNING
         p = subprocess.Popen(
             args=[
                 "java",
                 "-cp",
-                "./bin",
+                bin_dir.absolute(),
                 "src.Translate",
                 "noGUI",
                 "t2b" if self.direction == Direction.T2B else "b2t",
                 self.level,
                 input_path.absolute(),
+                # "--debug",
             ],
             cwd=proj_dir,
             stderr=subprocess.PIPE,
+            stdout=subprocess.PIPE,
         )
+        self.err = p.stderr.read().decode() if p.stderr else "Unknown error"
+        self.out = p.stdout.read().decode() if p.stdout else "Unknown error"
         try:
-            p.wait(timeout=5)
+            p.wait(timeout=60)
             self.status = Status.COMPLETE
         except subprocess.TimeoutExpired:
             p.kill()
-            self.result = p.stderr.read().decode() if p.stderr else "Unknown error"
+            print(self.out + self.err)
             self.status = Status.ERROR
-            return
+            return p
 
         if p.returncode != 0:
-            self.result = p.stderr.read().decode() if p.stderr else "Unknown error"
+            self.err = p.stderr.read().decode() if p.stderr else "Unknown error"
+            self.out = p.stdout.read().decode() if p.stdout else "Unknown error"
             self.status = Status.ERROR
-            return
+            return p
 
         with (
-            open(output_path, "r") as out,
-            open(input_path, "r") as _input,
-            open(results_path, "r") as rec,
+            open(output_path, "r", encoding="utf-8") as out,
+            open(input_path, "r", encoding="utf-8") as _input,
+            open(results_path, "r", encoding="utf-8") as rec,
         ):
             self.result = Testcase.TestResult(
                 input=_input.read(), recieved=rec.read(), expected=out.read()
             )
         self.status = self.result.get_status()
+        p.wait()
         results_path.unlink()
+        return p
 
 
 class TestSet:
@@ -189,11 +210,13 @@ class TestSet:
             raise ValueError("Test set complete")
         self.testcases.append(testcase)
 
-    def run(self, proj_dir: Path):
+    def run(self, proj_dir: Path, bin_dir: Path):
         if self.complete:
             raise ValueError("Test set complete")
-        for testcase in self.testcases:
-            testcase.run(proj_dir)
+        for i, testcase in enumerate(self.testcases):
+            print(f"\rRunning testcase {i + 1}/{len(self.testcases)}".ljust(50), end="")
+            testcase.run(proj_dir, bin_dir)
+            print("Done")
         self.complete = True
 
     def summary(self, verbosity: int = 0) -> str:
@@ -280,11 +303,11 @@ class TestSet:
             testcase for testcase in self.testcases if testcase.status == Status.ERROR
         ]
 
-        ret += [("\n")]
-        ret += [("-" * term_width)]
-        ret += [("| Results |".center(term_width))]
-        ret += [("-" * term_width)]
-        ret += [("\n")]
+        ret += "\n"
+        ret += "-" * term_width
+        ret += "| Results |".center(term_width)
+        ret += "-" * term_width
+        ret += "\n"
         ret += [
             (
                 TableMaker(
@@ -310,13 +333,13 @@ class TestSet:
                 )
             )
         ]
-        ret += [("\n")]
-        ret += [("-" * term_width)]
-        ret += [("| Breakdown |".center(term_width, "-"))]
-        ret += [("-" * term_width)]
-        ret += [("\n")]
-        ret += [("| By Level |".center(term_width, "-"))]
-        ret += [("\n")]
+        ret += "\n"
+        ret += "-" * term_width
+        ret += "| Breakdown |".center(term_width, "-")
+        ret += "-" * term_width
+        ret += "\n"
+        ret += "| By Level |".center(term_width, "-")
+        ret += "\n"
         ret += [
             (
                 TableMaker(
@@ -370,9 +393,9 @@ class TestSet:
                 )
             )
         ]
-        ret += [("\n")]
-        ret += [("| By Tag |".center(term_width, "-"))]
-        ret += [("\n")]
+        ret += "\n"
+        ret += "| By Tag |".center(term_width, "-")
+        ret += "\n"
         ret += [
             (
                 TableMaker(
@@ -426,9 +449,9 @@ class TestSet:
                 )
             )
         ]
-        ret += [("\n")]
-        ret += [("| By Direction |".center(term_width, "-"))]
-        ret += [("\n")]
+        ret += "\n"
+        ret += "| By Direction |".center(term_width, "-")
+        ret += "\n"
         ret += [
             (
                 TableMaker(
@@ -502,9 +525,9 @@ class TestSet:
             )
         ]
         if 0 < verbosity <= 1:
-            ret += [("\n")]
-            ret += [("| Details |".center(term_width, "-"))]
-            ret += [("\n")]
+            ret += "\n"
+            ret += "| Details |".center(term_width, "-")
+            ret += "\n"
             ret += [
                 (
                     TableMaker(
@@ -524,22 +547,29 @@ class TestSet:
                     )
                 )
             ]
-            ret += [("\n")]
+            ret += "\n"
         elif 1 < verbosity:
-            ret += [("-" * term_width)]
-            ret += [("| Verbose |".center(term_width))]
-            ret += [("-" * term_width)]
-            ret += [("\n")]
+            ret += "-" * term_width
+            ret += "| Verbose |".center(term_width)
+            ret += "-" * term_width
+            ret += "\n"
             for testcase in self.testcases:
-                ret += [(f"Testcase: {testcase.name}")]
-                ret += [(f"Description: {testcase.description}")]
-                ret += [(f"Level: {testcase.level}")]
-                ret += [(f"Tags: {testcase.tags}")]
-                ret += [(f"Status: {testcase.status.name}")]
+                ret += f"   Testcase : {testcase.name}"
+                ret += f"Description : {testcase.description}"
+                ret += f"  Direction : {testcase.direction.name}"
+                ret += f"      Level : {testcase.level}"
+                ret += f"       Tags : {testcase.tags}"
+                ret += f"     Status : {testcase.status.name}"
+                if testcase.status == Status.ERROR:
+                    ret += [
+                        (
+                            f"Error: \n{'\n'.join(map(lambda x:'\t' + x,testcase.err.splitlines()))}"
+                        )
+                    ]
                 ret += [str(testcase.result)]
-                ret += [("\n")]
+                ret += "\n"
 
-        ret += [("-" * term_width)]
+        ret += "-" * term_width
         return "\n".join(ret)
 
     def validate(self):
