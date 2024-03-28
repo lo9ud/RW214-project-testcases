@@ -9,7 +9,7 @@ ALLOWED_TAGS = set(
         "text",
         "numbers",
         "punctuation",
-        "capitalization",
+        "capitals",
         "contractions",
         "long",
         "diacritics",

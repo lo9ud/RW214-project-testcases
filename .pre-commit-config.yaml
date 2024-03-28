@@ -12,7 +12,7 @@ repos:
         types: [json]
     -   id: pretty-format-json
         types: [json]
-        args: [--autofix, --indent, '2', --top-keys, "name,desc"]
+        args: [--autofix, --indent, '2', --top-keys, "name,desc,$schema"]
 -   repo: local
     hooks:
     -   id: black
