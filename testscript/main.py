@@ -9,8 +9,10 @@ from validate_cases import validate
 
 
 def main(args: argparse.Namespace):
-    set_color_enabled(args.color)
-    set_tabulate_enabled(args.pretty_print)
+    if hasattr(args, "color"):
+        set_color_enabled(args.color)
+    if hasattr(args, "pretty_print"):
+        set_tabulate_enabled(args.pretty_print)
     match args.action:
         case "test":
             test(TestArgs(args))
