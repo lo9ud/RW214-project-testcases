@@ -45,10 +45,10 @@ def create(args: CreateArgs):
         os.makedirs(testcase_dir)
         print("Creating txt file...")
         with open(testcase_dir / "afr.txt", "w") as f:
-            f.write("// Afrikaans goes here\n")
+            f.write(input("Afrikaans text:\n") or "// Afrikaans goes here\n")
         print("Creating brf file...")
         with open(testcase_dir / "brf.brf", "w") as f:
-            f.write("// Braille output goes here\n")
+            f.write(input("Braille text:\n") or "// Braille output goes here\n")
         print("Creating manifest file...")
         with open(testcase_dir / "manifest.json", "w") as f:
             json.dump(
