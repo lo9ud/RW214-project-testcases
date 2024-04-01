@@ -68,9 +68,6 @@ def get_args(args: list[str]) -> argparse.Namespace:
     create_parser = subparsers.add_parser("create", help="Create a new testcase")
     create_parser.add_argument("-n", "--name", type=str, help="Name of the testcase")
     create_parser.add_argument(
-        "-d", "--direction", type=str, help="Direction of the testcase"
-    )
-    create_parser.add_argument(
         "-i", "--info", type=str, help="Description of the testcase"
     )
     create_parser.add_argument("-l", "--level", type=str, help="Level of the testcase")
@@ -115,7 +112,6 @@ class ValidateArgs:
 class CreateArgs:
     def __init__(self, args: argparse.Namespace):
         self.name: str = args.name
-        self.direction: str = args.direction
         self.info: str = args.info
         self.level: str = args.level
         self.tags: list[str] = args.tags

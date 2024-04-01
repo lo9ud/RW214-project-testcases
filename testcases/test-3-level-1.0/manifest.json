@@ -1,0 +1,9 @@
+{
+  "name": "Test 3 Level 1.0",
+  "desc": "Test3Level1.0.txt/.brf",
+  "$schema": "../schema.json",
+  "level": "1.0",
+  "tags": [
+    "text"
+  ]
+}
