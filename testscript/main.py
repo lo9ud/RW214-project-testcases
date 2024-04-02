@@ -8,7 +8,7 @@ from test_prog import test
 from validate_cases import validate
 
 
-def main(args: argparse.Namespace):
+def main(args: argparse.Namespace, parser: argparse.ArgumentParser):
     if hasattr(args, "color"):
         set_color_enabled(args.color)
     if hasattr(args, "pretty_print"):
@@ -21,7 +21,7 @@ def main(args: argparse.Namespace):
         case "create":
             create(CreateArgs(args))
         case _:
-            pass
+            parser.print_help()
 
 
 if __name__ == "__main__":

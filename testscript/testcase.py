@@ -1,10 +1,11 @@
 import json
-import os
 import subprocess
+import time
 from pathlib import Path
+from typing import Any, Literal
 
-from common import ALLOWED_TAGS, Direction, Status, colorize, ex_v_fd
-from table_maker import TableMaker
+from args import TestArgs
+from common import ALLOWED_TAGS, Direction, Status
 from testerror import TestError
 
 
@@ -25,21 +26,17 @@ class Testcase:
             self.input_brf = input_brf
             self.recieved_afr = recieved_afr
             self.expected_brf = expected_brf
+            self.time: float = 0
 
-        def __str__(self):
-            return TableMaker(
-                [
-                    ["", "T2B", "B2T"],
-                    ["Input", self.input_afr, self.input_brf],
-                    ["Recieved", self.recieved_brf, self.recieved_afr],
-                    ["Expected", self.expected_brf, self.expected_afr],
-                    [
-                        "Diff",
-                        "\n".join(self.get_diff(self.expected_brf, self.recieved_brf)),
-                        "\n".join(self.get_diff(self.expected_afr, self.recieved_afr)),
-                    ],
-                ]
-            )
+        def to_dict(self):
+            return {
+                "input_afr": self.input_afr,
+                "recieved_brf": self.recieved_brf,
+                "expected_afr": self.expected_afr,
+                "input_brf": self.input_brf,
+                "recieved_afr": self.recieved_afr,
+                "expected_brf": self.expected_brf,
+            }
 
         def get_status(self, direction: Direction) -> Status:
             match (direction):
@@ -55,9 +52,6 @@ class Testcase:
                         if (self.expected_afr == self.recieved_afr)
                         else Status.FAILED
                     )
-
-        def get_diff(self, ex: str, rec: str) -> tuple[str, str]:
-            return ex_v_fd(ex, rec)
 
     def __init__(self, root: Path, strict: bool = True):
         self.root: Path = root
@@ -78,6 +72,34 @@ class Testcase:
         if self.result is None:
             return False
         return self.result.get_status(direction) == Status.PASSED
+
+    def to_dict(
+        self,
+    ) -> dict[
+        Literal[
+            "name",
+            "description",
+            "level",
+            "tags",
+            "status",
+            "output",
+            "error",
+            "time",
+            "result",
+        ],
+        Any,
+    ]:
+        return {
+            "name": self.name,
+            "description": self.description,
+            "level": self.level,
+            "tags": self.tags,
+            "status": self.status,
+            "output": self.out,
+            "error": self.err,
+            "time": self.time,
+            "result": self.result.to_dict() if self.result else None,
+        }
 
     def import_manifest(self):
         if self.manifest.exists():
@@ -189,6 +211,7 @@ class Testcase:
                 results_path.unlink()
 
             self.status = Status.RUNNING
+            start_time = time.perf_counter()
             p = subprocess.Popen(
                 args=[
                     "java",
@@ -215,6 +238,8 @@ class Testcase:
                 print(self.out + self.err)
                 self.status = Status.ERROR
                 return
+            finally:
+                self.time = time.perf_counter() - start_time
 
             if p.returncode != 0:
                 self.err = p.stderr.read().decode() if p.stderr else "Unknown error"
@@ -256,6 +281,43 @@ class TestSet:
         self.testcases = testcases
         self.complete = False
 
+    @property
+    def time(self) -> float:
+        return sum(testcase.time for testcase in self.testcases)
+
+    @property
+    def passed(self) -> int:
+        return len(
+            [
+                testcase
+                for testcase in self.testcases
+                if testcase.status == Status.PASSED
+            ]
+        )
+
+    @property
+    def failed(self) -> int:
+        return len(
+            [
+                testcase
+                for testcase in self.testcases
+                if testcase.status == Status.FAILED
+            ]
+        )
+
+    @property
+    def errored(self) -> int:
+        return len(
+            [testcase for testcase in self.testcases if testcase.status == Status.ERROR]
+        )
+
+    def to_dict(self) -> dict[Literal["testcases", "count", "status"], Any]:
+        return {
+            "testcases": [testcase.to_dict() for testcase in self.testcases],
+            "count": len(self.testcases),
+            "status": self.complete,
+        }
+
     def add(self, testcase: Testcase):
         if self.complete:
             raise ValueError("Test set complete")
@@ -276,36 +338,73 @@ class TestSet:
             print(" | Done!")
         self.complete = True
 
-    def summary(self, verbosity: int = 0) -> str:
-        levels: dict[str, list[Testcase]] = {}
-        tags: dict[str, list[Testcase]] = {}
-        for testcase in self.testcases:
-            if testcase.level not in levels:
-                levels[testcase.level] = []
-            levels[testcase.level].append(testcase)
+    def summary(self, args: TestArgs) -> dict[str, int | float]:
+        if not self.complete:
+            raise ValueError("Test set incomplete")
 
-            for tag in testcase.tags:
-                if tag not in tags:
-                    tags[tag] = []
-                tags[tag].append(testcase)
-
-        return TableMaker(
-            (
+        return {
+            "Passed ": len(
                 [
-                    *[
-                        ["Level " + level, len(_testcases)]
-                        for level, _testcases in levels.items()
-                    ],
-                    *[
-                        ["Tag '" + tag + "'", len(_testcases)]
-                        for tag, _testcases in tags.items()
-                    ],
-                    ["Total", len(self.testcases)],
+                    testcase
+                    for testcase in self.testcases
+                    if testcase.status == Status.PASSED
                 ]
-                if verbosity > 0
-                else []
             ),
-        )
+            "Failed ": len(
+                [
+                    testcase
+                    for testcase in self.testcases
+                    if testcase.status == Status.FAILED
+                ]
+            ),
+            "Error ": len(
+                [
+                    testcase
+                    for testcase in self.testcases
+                    if testcase.status == Status.ERROR
+                ]
+            ),
+            "Total ": len(self.testcases),
+            "Time ": self.time,
+        }
+
+    def results(self, args: TestArgs) -> list[
+        dict[
+            Literal[
+                "name",
+                "description",
+                "level",
+                "tags",
+                "status",
+                "output",
+                "error",
+                "time",
+                "result",
+            ],
+            Any,
+        ]
+    ]:
+        if not self.complete:
+            raise ValueError("Test set incomplete")
+        ret: list[
+            dict[
+                Literal[
+                    "name",
+                    "description",
+                    "level",
+                    "tags",
+                    "status",
+                    "output",
+                    "error",
+                    "time",
+                    "result",
+                ],
+                Any,
+            ]
+        ] = []
+        for testcase in self.testcases:
+            ret.append(testcase.to_dict())
+        return ret
 
     def __iter__(self):
         return iter(self.testcases)
@@ -315,316 +414,3 @@ class TestSet:
 
     def __getitem__(self, index: int) -> Testcase:
         return self.testcases[index]
-
-    def results(self, verbosity: int) -> str:
-        term_width = os.get_terminal_size().columns - 1
-        ret: list[str] = ["", ""]
-        levels: dict[str, list[Testcase]] = {}
-        tags: dict[str, list[Testcase]] = {}
-        for testcase in self.testcases:
-            if testcase.level not in levels:
-                levels[testcase.level] = []
-            levels[testcase.level].append(testcase)
-
-            for tag in testcase.tags:
-                if tag not in tags:
-                    tags[tag] = []
-                tags[tag].append(testcase)
-
-        passed = [
-            testcase for testcase in self.testcases if testcase.status == Status.PASSED
-        ]
-        failed = [
-            testcase for testcase in self.testcases if testcase.status == Status.FAILED
-        ]
-        error = [
-            testcase for testcase in self.testcases if testcase.status == Status.ERROR
-        ]
-        ret.append("\n")
-        ret.append("-" * term_width)
-        ret.append("| Results |".center(term_width))
-        ret.append("-" * term_width)
-        ret.append("\n")
-        ret += [
-            (
-                TableMaker(
-                    [
-                        ["Status", "Count", "Percentage"],
-                        [
-                            "Passed",
-                            len(passed),
-                            f"{len(passed) / len(self.testcases) * 100:.0f}%",
-                        ],
-                        [
-                            "Failed",
-                            len(failed),
-                            f"{len(failed) / len(self.testcases) * 100:.0f}%",
-                        ],
-                        [
-                            "Error",
-                            len(error),
-                            f"{len(error) / len(self.testcases) * 100:.0f}%",
-                        ],
-                        ["Total", len(self.testcases), "100%"],
-                    ],
-                )
-            )
-        ]
-        if not failed and not error:
-            ret.append(TableMaker([[colorize(" All testcases passed ", "green")]]))
-            if verbosity < 1:
-                return "\n".join(ret)
-        ret.append("\n")
-        ret.append("-" * term_width)
-        ret.append("| Breakdown |".center(term_width, "-"))
-        ret.append("-" * term_width)
-        ret.append("\n")
-        ret.append("| By Level |".center(term_width, "-"))
-        ret.append("\n")
-        ret += [
-            (
-                TableMaker(
-                    [
-                        ["Level", "Passed", "Failed", "Error", "Total"],
-                        *[
-                            [
-                                level,
-                                len(
-                                    [
-                                        testcase
-                                        for testcase in self.testcases
-                                        if testcase.level == level
-                                        and testcase.status == Status.PASSED
-                                    ]
-                                ),
-                                len(
-                                    [
-                                        testcase
-                                        for testcase in self.testcases
-                                        if testcase.level == level
-                                        and testcase.status == Status.FAILED
-                                    ]
-                                ),
-                                len(
-                                    [
-                                        testcase
-                                        for testcase in self.testcases
-                                        if testcase.level == level
-                                        and testcase.status == Status.ERROR
-                                    ]
-                                ),
-                                len(
-                                    [
-                                        testcase
-                                        for testcase in self.testcases
-                                        if testcase.level == level
-                                    ]
-                                ),
-                            ]
-                            for level in levels.keys()
-                        ],
-                        [
-                            "Total",
-                            len(passed),
-                            len(failed),
-                            len(error),
-                            len(self.testcases),
-                        ],
-                    ],
-                )
-            )
-        ]
-        ret.append("\n")
-        ret.append("| By Tag |".center(term_width, "-"))
-        ret.append("\n")
-        ret += [
-            (
-                TableMaker(
-                    [
-                        ["Tag", "Passed", "Failed", "Error", "Total"],
-                        *[
-                            [
-                                tag,
-                                len(
-                                    [
-                                        testcase
-                                        for testcase in self.testcases
-                                        if tag in testcase.tags
-                                        and testcase.status == Status.PASSED
-                                    ]
-                                ),
-                                len(
-                                    [
-                                        testcase
-                                        for testcase in self.testcases
-                                        if tag in testcase.tags
-                                        and testcase.status == Status.FAILED
-                                    ]
-                                ),
-                                len(
-                                    [
-                                        testcase
-                                        for testcase in self.testcases
-                                        if tag in testcase.tags
-                                        and testcase.status == Status.ERROR
-                                    ]
-                                ),
-                                len(
-                                    [
-                                        testcase
-                                        for testcase in self.testcases
-                                        if tag in testcase.tags
-                                    ]
-                                ),
-                            ]
-                            for tag in tags.keys()
-                        ],
-                        [
-                            "Total",
-                            len(passed),
-                            len(failed),
-                            len(error),
-                            len(self.testcases),
-                        ],
-                    ],
-                )
-            )
-        ]
-        ret.append("\n")
-        ret.append("| By Direction |".center(term_width, "-"))
-        ret.append("\n")
-        ret += [
-            (
-                TableMaker(
-                    [
-                        ["Direction", "Passed", "Failed", "Error", "Total"],
-                        [
-                            "T2B",
-                            len(
-                                [
-                                    testcase
-                                    for testcase in self.testcases
-                                    if testcase.passed(Direction.T2B)
-                                    and testcase.status == Status.PASSED
-                                ]
-                            ),
-                            len(
-                                [
-                                    testcase
-                                    for testcase in self.testcases
-                                    if testcase.passed(Direction.T2B)
-                                    and testcase.status == Status.FAILED
-                                ]
-                            ),
-                            len(
-                                [
-                                    testcase
-                                    for testcase in self.testcases
-                                    if testcase.passed(Direction.T2B)
-                                    and testcase.status == Status.ERROR
-                                ]
-                            ),
-                            len(
-                                [
-                                    testcase
-                                    for testcase in self.testcases
-                                    if testcase.passed(Direction.T2B)
-                                ]
-                            ),
-                        ],
-                        [
-                            "B2T",
-                            len(
-                                [
-                                    testcase
-                                    for testcase in self.testcases
-                                    if testcase.passed(Direction.B2T)
-                                    and testcase.status == Status.PASSED
-                                ]
-                            ),
-                            len(
-                                [
-                                    testcase
-                                    for testcase in self.testcases
-                                    if testcase.passed(Direction.B2T)
-                                    and testcase.status == Status.FAILED
-                                ]
-                            ),
-                            len(
-                                [
-                                    testcase
-                                    for testcase in self.testcases
-                                    if testcase.passed(Direction.B2T)
-                                    and testcase.status == Status.ERROR
-                                ]
-                            ),
-                            len(
-                                [
-                                    testcase
-                                    for testcase in self.testcases
-                                    if testcase.passed(Direction.B2T)
-                                ]
-                            ),
-                        ],
-                        [
-                            "Total",
-                            len(passed),
-                            len(failed),
-                            len(error),
-                            len(self.testcases),
-                        ],
-                    ],
-                )
-            )
-        ]
-        if 0 < verbosity <= 1:
-            ret.append("\n")
-            ret.append("| Details |".center(term_width, "-"))
-            ret.append("\n")
-            ret += [
-                (
-                    TableMaker(
-                        [
-                            ["Name", "Description", "Level", "Tags", "Status"],
-                            *[
-                                [
-                                    testcase.name,
-                                    testcase.description,
-                                    testcase.level,
-                                    testcase.tags,
-                                    testcase.status.name,
-                                ]
-                                for testcase in self.testcases
-                            ],
-                        ],
-                    )
-                )
-            ]
-            ret.append("\n")
-        elif 1 < verbosity:
-            ret.append("-" * term_width)
-            ret.append("| Verbose |".center(term_width))
-            ret.append("-" * term_width)
-            ret.append("\n")
-            for testcase in self.testcases:
-                ret.append(f"   Testcase : {testcase.name}")
-                ret.append(f"Description : {testcase.description}")
-                ret.append(f"      Level : {testcase.level}")
-                ret.append(f"       Tags : {testcase.tags}")
-                ret.append(
-                    f"     Status : {colorize(testcase.status.name,'green' if testcase.status == Status.PASSED else 'red')}"
-                )
-                if testcase.status == Status.ERROR:
-                    ret += [
-                        f"Error: \n{'\n'.join(map(lambda x:'\t' + x,testcase.err.splitlines()))}"
-                    ]
-                ret.append(str(testcase.result))
-                ret.append("\n")
-
-        ret.append("-" * term_width)
-        return "\n".join(ret)
-
-    def validate(self):
-        for testcase in self.testcases:
-            testcase.validate()
-        return True
