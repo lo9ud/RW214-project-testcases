@@ -2,7 +2,7 @@ import json
 import subprocess
 import time
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any, Literal, Union
 
 from args import TestArgs
 from common import ALLOWED_TAGS, Direction, Status
@@ -39,19 +39,18 @@ class Testcase:
             }
 
         def get_status(self, direction: Direction) -> Status:
-            match (direction):
-                case Direction.T2B:
-                    return (
-                        Status.PASSED
-                        if (self.expected_brf == self.recieved_brf)
-                        else Status.FAILED
-                    )
-                case Direction.B2T:
-                    return (
-                        Status.PASSED
-                        if (self.expected_afr == self.recieved_afr)
-                        else Status.FAILED
-                    )
+            if direction == Direction.T2B:
+                return (
+                    Status.PASSED
+                    if (self.expected_brf == self.recieved_brf)
+                    else Status.FAILED
+                )
+            elif direction == Direction.B2T:
+                return (
+                    Status.PASSED
+                    if (self.expected_afr == self.recieved_afr)
+                    else Status.FAILED
+                )
 
     def __init__(self, root: Path, strict: bool = True):
         self.root: Path = root
@@ -60,7 +59,7 @@ class Testcase:
         self.description: str = None  # type: ignore
         self.level: str = None  # type: ignore
         self.tags: list[str] = None  # type: ignore
-        self.result: Testcase.TestResult | None = None
+        self.result: Union[Testcase.TestResult, None] = None
         self.import_manifest()
         if strict:
             self.validate()
@@ -75,20 +74,7 @@ class Testcase:
 
     def to_dict(
         self,
-    ) -> dict[
-        Literal[
-            "name",
-            "description",
-            "level",
-            "tags",
-            "status",
-            "output",
-            "error",
-            "time",
-            "result",
-        ],
-        Any,
-    ]:
+    ) -> 'dict[ Literal["name","description","level","tags","status","output","error","time","result",],Any,]':
         return {
             "name": self.name,
             "description": self.description,
@@ -159,16 +145,15 @@ class Testcase:
         if brf_name not in contents:
             raise TestError("Braille file 'brf.brf' not found.")
 
-        with (
-            open(self.root / afr_name, "r") as afr_file,
-            open(self.root / brf_name, "r") as brf_file,
-        ):
+        with open(self.root / afr_name, "r") as afr_file, open(
+            self.root / brf_name, "r"
+        ) as brf_file:
             afr = afr_file.read()
             brf = brf_file.read()
             if not afr.strip() or not brf.strip():
                 raise TestError("Test file(s) empty")
 
-    def run(self, proj_dir: Path, bin_dir: Path) -> None:
+    def run(self, proj_dir: Path, bin_dir: Path, timeout: float) -> None:
         cases = {
             Direction.B2T: {
                 "input": "brf.brf",
@@ -231,7 +216,7 @@ class Testcase:
             self.err = p.stderr.read().decode() if p.stderr else "Unknown error"
             self.out = p.stdout.read().decode() if p.stdout else "Unknown error"
             try:
-                p.wait(timeout=60)
+                p.wait(timeout=timeout)
                 self.status = Status.COMPLETE
             except subprocess.TimeoutExpired:
                 p.kill()
@@ -247,11 +232,9 @@ class Testcase:
                 self.status = Status.ERROR
                 return
 
-            with (
-                open(expected_path, "r", encoding="utf-8") as out,
-                open(input_path, "r", encoding="utf-8") as _input,
-                open(results_path, "r", encoding="utf-8") as rec,
-            ):
+            with open(expected_path, "r", encoding="utf-8") as out, open(
+                input_path, "r", encoding="utf-8"
+            ) as _input, open(results_path, "r", encoding="utf-8") as rec:
                 results[context["direction"]]["input"] = _input.read()
                 results[context["direction"]]["expected"] = out.read()
                 results[context["direction"]]["recieved"] = rec.read()
@@ -277,9 +260,18 @@ class Testcase:
 
 
 class TestSet:
-    def __init__(self, testcases: list[Testcase] = []) -> None:
+    def __init__(self, testcases: "list[Testcase]" = []) -> None:
         self.testcases = testcases
         self.complete = False
+
+    def __iter__(self):
+        return iter(self.testcases)
+
+    def __len__(self):
+        return len(self.testcases)
+
+    def __getitem__(self, index: int) -> Testcase:
+        return self.testcases[index]
 
     @property
     def time(self) -> float:
@@ -311,7 +303,7 @@ class TestSet:
             [testcase for testcase in self.testcases if testcase.status == Status.ERROR]
         )
 
-    def to_dict(self) -> dict[Literal["testcases", "count", "status"], Any]:
+    def to_dict(self) -> 'dict[Literal["testcases", "count", "status"], Any]':
         return {
             "testcases": [testcase.to_dict() for testcase in self.testcases],
             "count": len(self.testcases),
@@ -323,7 +315,7 @@ class TestSet:
             raise ValueError("Test set complete")
         self.testcases.append(testcase)
 
-    def run(self, proj_dir: Path, bin_dir: Path):
+    def run(self, proj_dir: Path, bin_dir: Path, timeout: float):
         if self.complete:
             raise ValueError("Test set complete")
         log_len = len(str(len(self.testcases)))
@@ -334,11 +326,11 @@ class TestSet:
                 ),
                 end="",
             )
-            testcase.run(proj_dir, bin_dir)
-            print(" | Done!")
+            testcase.run(proj_dir, bin_dir, timeout)
+            print("Done!")
         self.complete = True
 
-    def summary(self, args: TestArgs) -> dict[str, int | float]:
+    def summary(self, args: TestArgs) -> "dict[str, int | float]":
         if not self.complete:
             raise ValueError("Test set incomplete")
 
@@ -368,22 +360,9 @@ class TestSet:
             "Time ": self.time,
         }
 
-    def results(self, args: TestArgs) -> list[
-        dict[
-            Literal[
-                "name",
-                "description",
-                "level",
-                "tags",
-                "status",
-                "output",
-                "error",
-                "time",
-                "result",
-            ],
-            Any,
-        ]
-    ]:
+    def results(
+        self, args: TestArgs
+    ) -> 'list[dict[ Literal["name","description","level","tags","status","output","error","time","result",],Any,]]':
         if not self.complete:
             raise ValueError("Test set incomplete")
         ret: list[
@@ -405,12 +384,3 @@ class TestSet:
         for testcase in self.testcases:
             ret.append(testcase.to_dict())
         return ret
-
-    def __iter__(self):
-        return iter(self.testcases)
-
-    def __len__(self):
-        return len(self.testcases)
-
-    def __getitem__(self, index: int) -> Testcase:
-        return self.testcases[index]

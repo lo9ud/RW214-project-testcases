@@ -2,7 +2,7 @@ import subprocess
 from pathlib import Path
 
 from args import TestArgs
-from report_formatter import JsonFormatter, ReportFormatter, TableFormatter
+from report_formatter import TableFormatter
 from table_maker import TableMaker
 from testcase import Testcase, TestSet
 from testerror import TestError
@@ -43,7 +43,12 @@ def test(args: TestArgs):
     if p.stderr:
         out = p.stderr.read().decode("utf-8").splitlines()
         for line in out:
-            if "errors" in line or "warnings" in line:
+            if (
+                "errors" in line
+                or "warnings" in line
+                or "error" in line
+                or "warning" in line
+            ):
                 print(f"  {line}")
                 break
         else:
@@ -66,36 +71,9 @@ def test(args: TestArgs):
             continue
 
     print("Running testcases...")
-    testcases.run(proj_dir, bin_dir)
+    testcases.run(proj_dir, bin_dir, args.timeout)
     print("Done")
 
-    match args.output_style:
-        case "table":
-            print(
-                TableFormatter().format(
-                    testcases, args.breakdown, args.show_passing, args.details
-                )
-            )
-        case "json":
-            print(
-                JsonFormatter().format(
-                    testcases, args.breakdown, args.show_passing, args.details
-                )
-            )
-        case "report":
-            print(
-                ReportFormatter().format(
-                    testcases, args.breakdown, args.show_passing, args.details
-                )
-            )
-        case "minimal":
-            print(
-                "\n\n".join(
-                    "\n".join(f"{k}: {v}" for k, v in testcase.to_dict())
-                    for testcase in testcases
-                )
-            )
-        case _:
-            pass
+    print(TableFormatter().format(testcases, args.show_passing, args.details))
 
     subprocess.run(["rm", "-rf", bin_dir], check=True)

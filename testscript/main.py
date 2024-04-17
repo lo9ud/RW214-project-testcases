@@ -11,17 +11,18 @@ from validate_cases import validate
 def main(args: argparse.Namespace, parser: argparse.ArgumentParser):
     if hasattr(args, "color"):
         set_color_enabled(args.color)
+
     if hasattr(args, "pretty_print"):
         set_tabulate_enabled(args.pretty_print)
-    match args.action:
-        case "test":
-            test(TestArgs(args))
-        case "validate":
-            validate(ValidateArgs(args))
-        case "create":
-            create(CreateArgs(args))
-        case _:
-            parser.print_help()
+
+    if args.action == "test":
+        test(TestArgs(args))
+    elif args.action == "validate":
+        validate(ValidateArgs(args))
+    elif args.action == "create":
+        create(CreateArgs(args))
+    else:
+        parser.print_help()
 
 
 if __name__ == "__main__":
