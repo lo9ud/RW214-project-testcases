@@ -2,10 +2,5 @@
   "name": "Simple Sentence 1",
   "desc": "A simple sentence",
   "$schema": "../schema.json",
-  "level": "1.0",
-  "tags": [
-    "text",
-    "punctuation",
-    "capitals"
-  ]
+  "level": "1.0"
 }

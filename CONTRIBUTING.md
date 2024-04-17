@@ -1,7 +1,20 @@
 # Contributing
 
 Please create a new branch for your changes and make a pull request to the `main` branch.
+## Workflow
+```mermaid
+flowchart TD
+  Create[Create new branch
+  git checkout -b dev-#lt;testcase-name#gt; dev]
+  Change[Make changes]
+  Commit[Commit and push changes
+  git commit -m #quot;message#quot;]
+  Explain[Create issue for your changes, explaining
+  why the changes are necessary, and identifying
+  the branch you are working on]
 
+  Create --> Change --> Commit --> Explain
+```
 ## Requirements
 
 The following python packages will be required to push testcases to the repository:
@@ -12,7 +25,7 @@ The following python packages will be required to push testcases to the reposito
 To install these packages, run the following command:
 
 ```bash
-pip install -r requirements.txt
+pip install -r dev-requirements.txt
 ```
 
 This will install the required packages.
@@ -21,23 +34,40 @@ This will install the required packages.
 
 To create a template for a testcase, run `test.py create`
 
-## Creating a Pull Request (PR)
+A testcase is a directory containing three files:
 
-A GitHub account is required to make a PR. If you do not have a GitHub account, you may create an issue using the template provided in the issue tracker.
+ - `input.[brf|txt]`: The input file.
+ - `output.[brf|txt]`: The output file.
+ - `manifest.json`: The manifest file.
 
-To create a PR, please follow the steps below:
+The input and output files are the Braille and Afrikaans files. The manifest file contains metadata about the testcase. Read more about the manifest file [here](./MANIFEST.md).
 
-- On the GitHub page [lo9ud/RW214-project-testcases](https://github.com/lo9ud/RW214-project-testcases).
-- Clone the repository to your local machine.
-- Create a new branch for your changes from `dev`.
-  - The branch name should be descriptive of the changes you are making in the format `dev-<testcase-name>`. i.e.) `dev-my-simple-testcase`.
-  - Create a branch using the following command: `git checkout -b dev-<testcase-name> dev`.
-- Make your changes.
-- Commit your changes to this branch.
-- On the GitHub page open you brnach and click on `Contribute` -> `Pull Request` at the top right.
-- Fill in the PR template and submit the PR.
-- The PR will be reviewed and merged if it meets the requirements.
-- If the PR is accepted, the changes will be merged into the main repository, and you may delete your forked repository.
-- If the PR is not accepted, you may make the necessary changes and resubmit the PR.
+### Example Testcase
+(Find this example in the [`my-simple-testcase`](testcases\my-simple-testcase) directory in the repository)
+```
+my-simple-testcase/
+├── input.txt
+├── output.brf
+└── manifest.json
+```
+`mainfest.json`:
+```json
+{
+    "$schema": "../schema.json",
+    "name": "My Simple Testcase",
+    "description": "This is a simple testcase",
+    "level": "1.0",
+    "direction": "afrikaans-to-braille",
+    "tags": ["text"]
+}
+```
 
-Do not submit too many PR's, as this will make it difficult to review them. If you have multiple testcases to submit, please include them in a single PR.
+`input.txt`:
+```
+dit is warm
+```
+
+`output.brf`:
+```
+145-24-2345 24-234 2456-1-1235-134
+```

@@ -5,6 +5,21 @@ Shared testcases for the 2024 RW214 project.
 
 ## Usage
 
+### Installation
+#### For basic users
+Run all commands in terminal
+```mermaid
+graph TD
+    A["Clone the repository
+    git clone https://github.com/lo9ud/RW214-project-testcases.git "]
+    B["Locate project folder path
+    your/path/to/RW214-project-testcases"]
+    C["Run the test script
+    python testscript test #quot;your/path/to/project#quot;"]
+    A --> B --> C
+```
+If you are a basic user, you do not need to install any additional packages, nor do you need to read any more of this README. You can simply follow the instructions above to run the test script.
+#### For developers and more advanced users
 ```
 % user@machine:~$ python testscript -h
 usage: testscript [-h] [--version] {test,validate,create} ...
@@ -22,15 +37,6 @@ options:
   -h, --help            show this help message and exit
   --version             show program's version number and exit
 ```
-
-A testcase is a directory containing three files:
-
- - `input.[brf|txt]`: The input file.
- - `output.[brf|txt]`: The output file.
- - `manifest.json`: The manifest file.
-
-The input and output files are the Braille and Afrikaans files. The manifest file contains metadata about the testcase. Read more about the manifest file [here](./MANIFEST.md).
-
 To run the tests, run `test.py test`
 
 ```
@@ -47,36 +53,6 @@ To create a template for a testcase, run `test.py create`
 
 ```
 % user@machine:~$ python .\testscript\test.py create
-```
-
-### Example Testcase
-
-```
-my-simple-testcase/
-├── input.txt
-├── output.brf
-└── manifest.json
-```
-mainfest.json:
-```json
-{
-    "$schema": "../schema.json",
-    "name": "My Simple Testcase",
-    "description": "This is a simple testcase",
-    "level": "1.0",
-    "direction": "afrikaans-to-braille",
-    "tags": ["text"]
-}
-```
-
-input.txt:
-```
-dit is warm
-```
-
-output.brf:
-```
-145-24-2345 24-234 2456-1-1235-134
 ```
 
 ## Contributing

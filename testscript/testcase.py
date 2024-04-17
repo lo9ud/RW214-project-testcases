@@ -58,7 +58,6 @@ class Testcase:
         self.name: str = None  # type: ignore
         self.description: str = None  # type: ignore
         self.level: str = None  # type: ignore
-        self.tags: list[str] = None  # type: ignore
         self.result: Union[Testcase.TestResult, None] = None
         self.import_manifest()
         if strict:
@@ -79,7 +78,6 @@ class Testcase:
             "name": self.name,
             "description": self.description,
             "level": self.level,
-            "tags": self.tags,
             "status": self.status,
             "output": self.out,
             "error": self.err,
@@ -94,7 +92,6 @@ class Testcase:
                 self.name = data.get("name")
                 self.description = data.get("desc")
                 self.level = data.get("level")
-                self.tags = data.get("tags")
                 # check types
                 if not isinstance(self.name, str):
                     raise TestError("Invalid name")
@@ -102,8 +99,6 @@ class Testcase:
                     raise TestError("Invalid description")
                 if not isinstance(self.level, str):
                     raise TestError("Invalid level")
-                if not isinstance(self.tags, list):
-                    raise TestError("Invalid tags")
         else:
             raise FileNotFoundError("Manifest file not found")
 
@@ -111,12 +106,6 @@ class Testcase:
         # check for valid level
         if not 0 <= float(self.level) <= 4.1:
             raise TestError("Invalid level")
-
-        # check for valid tags
-        if not len(set(self.tags)) == len(self.tags):
-            raise TestError("Duplicate tags")
-        if not all(x in ALLOWED_TAGS for x in self.tags):
-            raise TestError("Invalid tags: " + ", ".join(set(self.tags) - ALLOWED_TAGS))
 
         # check files
         # check for valid root

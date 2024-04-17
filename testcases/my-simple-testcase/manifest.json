@@ -2,8 +2,5 @@
   "name": "My Simple Testcase",
   "desc": "This is a simple testcase",
   "$schema": "../schema.json",
-  "level": "1.0",
-  "tags": [
-    "text"
-  ]
+  "level": "1.0"
 }

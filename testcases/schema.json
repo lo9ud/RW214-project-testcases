@@ -18,22 +18,12 @@
     "level": {
       "description": "The level of the testcase",
       "type": "string"
-    },
-    "tags": {
-      "description": "The tags of the testcase",
-      "items": {
-        "type": "string"
-      },
-      "minItems": 1,
-      "type": "array",
-      "uniqueItems": true
     }
   },
   "required": [
     "name",
     "desc",
-    "level",
-    "tags"
+    "level"
   ],
   "title": "Testcase",
   "type": "object"
