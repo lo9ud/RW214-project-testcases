@@ -6,6 +6,18 @@ Shared testcases for the 2024 RW214 project.
 ## Usage
 
 ### Installation
+Suggested installation location is adjacent to the project directory. i.e.)
+```
+your/path/to/
+    RW214-project-testcases/
+      |--- testscript/
+      |--- testcases/
+      |--- ...
+    <student-number>-RW214-project/
+      |--- src/
+      |--- bin/
+      |--- ...
+```
 #### For basic users
 Run all commands in terminal
 ```mermaid
