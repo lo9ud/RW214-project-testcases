@@ -6,17 +6,29 @@ Shared testcases for the 2024 RW214 project.
 ## Usage
 
 ### Installation
+Suggested installation location is adjacent to the project directory. i.e.)
+```
+your/path/to/
+    RW214-project-testcases/
+      |--- testscript/
+      |--- testcases/
+      |--- ...
+    <student-number>-RW214-project/
+      |--- src/
+      |--- bin/
+      |--- ...
+```
 #### For basic users
 Run all commands in terminal
 ```mermaid
 graph TD
-    A["Clone the repository
+    Clone["Clone the repository
     git clone https://github.com/lo9ud/RW214-project-testcases.git "]
-    B["Locate project folder path
+    Locate["Locate project folder path
     your/path/to/RW214-project-testcases"]
-    C["Run the test script
+    Run["Run the test script
     python testscript test #quot;your/path/to/project#quot;"]
-    A --> B --> C
+    Clone --> Locate --> Run
 ```
 If you are a basic user, you do not need to install any additional packages, nor do you need to read any more of this README. You can simply follow the instructions above to run the test script.
 #### For developers and more advanced users
