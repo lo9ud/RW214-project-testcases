@@ -34,9 +34,9 @@ If you are a basic user, you do not need to install any additional packages, nor
 #### For developers and more advanced users
 ```
 % user@machine:~$ python testscript -h
-usage: testscript [-h] [--version] {test,validate,create} ...
+usage: testscript [-h] [--version] [-c] [-p] {test,validate,create} ...
 
-Test script
+Test script for the RW214 Braille-Afrikaans Translator project
 
 positional arguments:
   {test,validate,create}
@@ -48,6 +48,9 @@ positional arguments:
 options:
   -h, --help            show this help message and exit
   --version             show program's version number and exit
+  -c, --no-color        Disable color output
+  -p, --no-pretty-print
+                        Disable pretty print for tabular data
 ```
 To run the tests, run `test.py test`
 
@@ -66,6 +69,8 @@ To create a template for a testcase, run `test.py create`
 ```
 % user@machine:~$ python .\testscript\test.py create
 ```
+
+All subcommands have a `-h` option to allow you to explore their other options.
 
 ## Contributing
 
