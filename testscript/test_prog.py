@@ -2,6 +2,7 @@ import subprocess
 from pathlib import Path
 
 from args import TestArgs
+from report_formatter import TableFormatter
 from table_maker import TableMaker
 from testcase import Testcase, TestSet
 from testerror import TestError
@@ -42,7 +43,12 @@ def test(args: TestArgs):
     if p.stderr:
         out = p.stderr.read().decode("utf-8").splitlines()
         for line in out:
-            if "errors" in line or "warnings" in line:
+            if (
+                "errors" in line
+                or "warnings" in line
+                or "error" in line
+                or "warning" in line
+            ):
                 print(f"  {line}")
                 break
         else:
@@ -64,23 +70,10 @@ def test(args: TestArgs):
             print(f"Skipping {testcase_folder}: {e}")
             continue
 
-    print(testcases.summary(verbosity=0))
-
     print("Running testcases...")
-    testcases.run(proj_dir, bin_dir)
+    testcases.run(proj_dir, bin_dir, args.timeout)
     print("Done")
 
-    print(testcases.results(verbosity=args.verbose))
+    print(TableFormatter().format(testcases, args.show_passing, args.details))
 
-    if args.verbose:
-        print("Cleaning up...")
     subprocess.run(["rm", "-rf", bin_dir], check=True)
-    if args.verbose:
-        print("Done")
-
-    print(
-        "If your results appear incorrect, please re-run the test with verbosity enabled ('-vvv') to see the output of each testcase."
-    )
-    print(
-        "If you believe the testcases are incorrect, please run 'python testscript validate' to check for errors in the testcases."
-    )

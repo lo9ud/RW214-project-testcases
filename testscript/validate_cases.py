@@ -21,5 +21,3 @@ def validate(args: ValidateArgs):
                 bad += 1
     if bad:
         sys.exit(1)
-    elif args.verbose:
-        print(testcases.summary(verbosity=args.verbose))

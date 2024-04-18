@@ -1,11 +1,22 @@
-### Currently allowed tags:
+# Manifest Files
 
- - `text`: The testcase is a simple text translation.
- - `numbers`: The testcase contains numbers.
- - `punctuation`: The testcase contains punctuation.
- - `capitalization`: The testcase contains capitalization.
- - `contractions`: The testcase contains contractions.
- - `diacritics`: The testcase contains diacritics.
- - `long`: The testcase is long. (> 100 characters in total)
+Manifest files are used to define the testcases that are used in the test suite.
+Each manifest file is a JSON file that contains an array of testcases.
+Each testcase is an object that contains the following fields:
 
-Please ensure that testcases are correctly tagged
+- `name`: The name of the testcase.
+- `description`: A description of the testcase.
+- `level`: The level of the testcase.
+
+The following is an example of a manifest file:
+
+```json
+{
+    "$schema": "../schema.json",
+    "name": "My Simple Testcase",
+    "description": "This is a simple testcase",
+    "level": "1.0",
+}
+```
+
+This allows for easy validation of the testcases and ensures that the testcases are correctly formatted and contain all the necessary information.

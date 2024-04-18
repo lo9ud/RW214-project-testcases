@@ -61,27 +61,26 @@ class bcolor(enum.Enum):
 
 def colorize(text: str, color: Literal["red", "green"], omit_ends: bool = False) -> str:
     if COLOR_ENABLED:
-        match color:
-            case "red":
-                color_code = bcolor.RED_BACK.value
-            case "green":
-                color_code = bcolor.GREEN_BACK.value
-            case _:  # type: ignore
-                raise ValueError(f"Invalid color: {color}, must be 'red' or 'green'")
+        if color == "red":
+            color_code = bcolor.RED_BACK.value
+        elif color == "green":
+            color_code = bcolor.GREEN_BACK.value
+        else:
+            raise ValueError(f"Invalid color: {color}, must be 'red' or 'green'")
         return f"{color_code}{text}" + (bcolor.ENDC.value if not omit_ends else "")
     else:
         return text
 
 
-def ex_v_fd(ex: str, fd: str) -> tuple[str, str]:
+def ex_v_fd(ex: str, fd: str) -> "tuple[str, str]":
     ex = ex.replace("\r\n", "\n").replace("\n", r"\n")
     fd = fd.replace("\r\n", "\n").replace("\n", r"\n")
 
-    def get_match(ex: str, fd: str) -> tuple[str, str]:
+    def get_match(ex: str, fd: str) -> "tuple[str, str]":
         matcher = difflib.SequenceMatcher()
         matcher.set_seq1(ex)
         matcher.set_seq2(fd)
-        mid = matcher.find_longest_match()
+        mid = matcher.find_longest_match(0, len(ex), 0, len(fd))
         if mid.size == 0:
             return (
                 colorize(ex.ljust(max(len(ex), len(fd))), "red", omit_ends=True),
