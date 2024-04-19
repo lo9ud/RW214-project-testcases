@@ -1,0 +1,6 @@
+{
+  "name": "easy4",
+  "desc": "Test case for easy4",
+  "$schema": "../schema.json",
+  "level": "1.0"
+}
