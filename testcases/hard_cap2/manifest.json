@@ -1,0 +1,6 @@
+{
+  "name": "hard_cap2",
+  "desc": "Test case for hard_cap2",
+  "$schema": "../schema.json",
+  "level": "1.0"
+}

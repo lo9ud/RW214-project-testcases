@@ -1,0 +1,6 @@
+{
+  "name": "medium8",
+  "desc": "Test case for medium8",
+  "$schema": "../schema.json",
+  "level": "1.0"
+}

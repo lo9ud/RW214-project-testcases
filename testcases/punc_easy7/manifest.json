@@ -1,0 +1,6 @@
+{
+  "name": "punc_easy7",
+  "desc": "Test case for punc_easy7",
+  "$schema": "../schema.json",
+  "level": "1.0"
+}
