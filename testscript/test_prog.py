@@ -9,9 +9,18 @@ from testerror import TestError
 
 
 def test(args: TestArgs):
-    proj_dir = Path(args.proj)
+    try:
+        if args.debug:
+            print("Resolving project directory")
+        proj_dir = Path(args.proj).resolve(strict=True)
+        if args.debug:
+            print("Resolved project directory")
+    except FileNotFoundError:
+        if args.debug:
+            print("Project directory resolution failed, using provided path")
+        proj_dir = Path(args.proj)
     src_dir = proj_dir / "src"
-    bin_dir = Path.cwd() / "bin"
+    bin_dir = proj_dir / "bin"
 
     if not proj_dir.exists():
         print("The provided path does not exist.")
