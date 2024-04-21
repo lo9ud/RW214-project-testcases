@@ -229,6 +229,7 @@ class Testcase:
                     results[context["direction"]]["input"] = _input.read()
                     results[context["direction"]]["expected"] = out.read()
                     results[context["direction"]]["recieved"] = rec.read()
+                results_path.unlink()
             except UnicodeDecodeError:
                 self.status = Status.ERROR
                 results[context["direction"]]["input"] = "UnicodeDecodeError"
@@ -243,7 +244,6 @@ class Testcase:
                 return
             finally:
                 p.wait()
-                results_path.unlink()
 
         self.result = self.TestResult(
             input_afr=results["t2b"]["input"],
