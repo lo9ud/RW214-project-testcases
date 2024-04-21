@@ -1,12 +1,14 @@
 from typing import Any, Callable, Final
 
 TABULATE_ENABLED: Final[bool] = False
+TABULATE_FOUND: Final[bool] = False
 try:
     from tabulate import tabulate
 
     def _tabulate(tabular_data: "list[list[Any]]") -> str:  # type: ignore
         return tabulate(tabular_data, tablefmt="fancy_grid") + "\n"
 
+    TABULATE_FOUND = True  # type: ignore
     TABULATE_ENABLED = True  # type: ignore
 except ImportError:
 
@@ -42,7 +44,7 @@ class _TableMaker:
 
     def __call__(self, tabular_data: "list[list[Any]]") -> str:
         global TABULATE_ENABLED
-        if TABULATE_ENABLED:
+        if TABULATE_ENABLED and TABULATE_FOUND:
             return _tabulate(tabular_data)
         return custom_tabulate(tabular_data)
 
