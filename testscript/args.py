@@ -37,6 +37,12 @@ def get_args(args: "list[str]") -> "tuple[argparse.Namespace, argparse.ArgumentP
         default=True,
     )
 
+    parser.add_argument(
+        "--debug",
+        help="Enable debug output",
+        action="store_true",
+        default=False,
+    )
     subparsers = parser.add_subparsers(help="Action", dest="action")
 
     test_parser = subparsers.add_parser("test", help="Run tests")
@@ -47,6 +53,14 @@ def get_args(args: "list[str]") -> "tuple[argparse.Namespace, argparse.ArgumentP
         type=int,
         help="Timeout for each testcase in seconds",
         default=10,
+    )
+
+    test_parser.add_argument(
+        "-e",
+        "--error",
+        help="Show error messages output by the compiler/program",
+        action="store_true",
+        default=False,
     )
 
     output_group = test_parser.add_argument_group(
@@ -66,7 +80,7 @@ def get_args(args: "list[str]") -> "tuple[argparse.Namespace, argparse.ArgumentP
         default=False,
     )
 
-    validate_parser = subparsers.add_parser("validate", help="Validate testcases")
+    subparsers.add_parser("validate", help="Validate testcases")
 
     create_parser = subparsers.add_parser("create", help="Create a new testcase")
     create_parser.add_argument("-n", "--name", type=str, help="Name of the testcase")
@@ -90,6 +104,7 @@ class ArgsWrapper:
         self.action: str = args.action
         self.color: bool = args.color
         self.pretty_print: bool = args.pretty_print
+        self.debug: bool = args.debug
 
     def get_args(self) -> argparse.Namespace:
         return self.args
@@ -107,6 +122,7 @@ class TestArgs(ArgsWrapper):
         self.timeout: int = args.timeout
         self.details: bool = args.details
         self.show_passing: bool = args.show_passing
+        self.error_output: bool = args.error
 
 
 class ValidateArgs(ArgsWrapper): ...
