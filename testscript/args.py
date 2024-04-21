@@ -118,7 +118,7 @@ class ArgsWrapper:
 class TestArgs(ArgsWrapper):
     def __init__(self, args: argparse.Namespace):
         super().__init__(args)
-        self.proj: Path = Path(args.proj)
+        self.proj: Path = Path(args.proj).resolve(strict=True)
         self.timeout: int = args.timeout
         self.details: bool = args.details
         self.show_passing: bool = args.show_passing

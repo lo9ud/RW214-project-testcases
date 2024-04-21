@@ -143,7 +143,9 @@ class Testcase:
             if not afr.strip() or not brf.strip():
                 raise TestError("Test file(s) empty")
 
-    def run(self, proj_dir: Path, bin_dir: Path, timeout: float) -> None:
+    def run(
+        self, proj_dir: Path, bin_dir: Path, timeout: float, debug: bool = False
+    ) -> None:
         cases = {
             Direction.B2T: {
                 "input": "brf.brf",
@@ -171,9 +173,21 @@ class Testcase:
             },
         }
         for context in cases.values():
+            if debug:
+                print("\n\nRunning test case: ", self.name, "@", context["direction"])
             input_path = self.root / context["input"]
+            if debug:
+                print("Input file path: ", input_path)
+                print("Sanity check: ", input_path.exists())
+                assert input_path.exists(), "Input file not found"
             expected_path = self.root / context["expected"]
+            if debug:
+                print("Expected file path: ", expected_path)
+                print("Sanity check: ", expected_path.exists())
+                assert expected_path.exists(), "Expected file not found"
             results_path = proj_dir / "out" / context["recieved"]
+            if debug:
+                print("Results file path: ", results_path)
 
             if not proj_dir.exists():
                 raise FileNotFoundError("Project directory not found")
@@ -183,10 +197,14 @@ class Testcase:
                 raise FileNotFoundError("Input file not found")
 
             if results_path.exists():
+                if debug:
+                    print("Removing existing results file")
                 results_path.unlink()
 
             self.status = Status.RUNNING
             start_time = time.perf_counter()
+            if debug:
+                print("Running java subprocess")
             p = subprocess.Popen(
                 args=[
                     "java",
@@ -203,48 +221,90 @@ class Testcase:
                 stderr=subprocess.PIPE,
                 stdout=subprocess.PIPE,
             )
+            if debug:
+                print("Subprocess started")
             self.err = p.stderr.read().decode() if p.stderr else "Unknown error"
             self.out = p.stdout.read().decode() if p.stdout else "Unknown error"
             try:
+                if debug:
+                    print("Waiting for subprocess to complete")
                 p.wait(timeout=timeout)
                 self.status = Status.COMPLETE
             except subprocess.TimeoutExpired:
+                if debug:
+                    print("Subprocess timeout")
                 p.kill()
                 print(self.out + self.err)
                 self.status = Status.ERROR
                 return
             finally:
+                if debug:
+                    print("Subprocess complete")
                 self.time = time.perf_counter() - start_time
+                if debug:
+                    print(f"Time taken: {self.time:.3f}s")
+                    print(
+                        "stdout:\n", self.out if not self.out.isspace() else "No output"
+                    )
+                    print(
+                        "stderr:\n", self.err if not self.err.isspace() else "No output"
+                    )
 
+            if debug:
+                print("Checking subprocess return code")
             if p.returncode != 0:
+                if debug:
+                    print("Subprocess error")
                 self.status = Status.ERROR
 
+            if debug:
+                print("Reading console output")
             self.err = p.stderr.read().decode() if p.stderr else "Unknown error"
             self.out = p.stdout.read().decode() if p.stdout else "Unknown error"
 
-            try:
+            if debug:
+                print("Reading results")
+            try:  # TODO: separate (known) input and expected file errors from results file errors
+                #       Currently, all errors cause all files to be marked as as error, regardless of the actual error
+                #       Use more manual file opening and closing for known files, and try-except for results file?
                 with open(expected_path, "r", encoding="utf-8") as out, open(
                     input_path, "r", encoding="utf-8"
                 ) as _input, open(results_path, "r", encoding="utf-8") as rec:
+                    if debug:
+                        print("Reading files")
                     results[context["direction"]]["input"] = _input.read()
                     results[context["direction"]]["expected"] = out.read()
                     results[context["direction"]]["recieved"] = rec.read()
-                results_path.unlink()
-            except UnicodeDecodeError:
+                    if debug:
+                        print("Reading complete")
+                if results_path.exists():
+                    if debug:
+                        print("Removing results file")
+
+                    results_path.unlink()
+                elif debug:
+                    print("Results file not found")
+            except UnicodeDecodeError as e:
+                if debug:
+                    print("UnicodeDecodeError: ", e)
                 self.status = Status.ERROR
                 results[context["direction"]]["input"] = "UnicodeDecodeError"
                 results[context["direction"]]["expected"] = "UnicodeDecodeError"
                 results[context["direction"]]["recieved"] = "UnicodeDecodeError"
-                return
-            except FileNotFoundError:
+            except FileNotFoundError as e:
+                if debug:
+                    print("FileNotFoundError: ", e)
                 self.status = Status.ERROR
                 results[context["direction"]]["input"] = "File not found"
                 results[context["direction"]]["expected"] = "File not found"
                 results[context["direction"]]["recieved"] = "File not found"
-                return
             finally:
+                if debug:
+                    print("Results complete, ensuring subprocess is closed")
                 p.wait()
 
+        if debug:
+            print("Setting results")
         self.result = self.TestResult(
             input_afr=results["t2b"]["input"],
             recieved_brf=results["t2b"]["recieved"],
@@ -320,7 +380,7 @@ class TestSet:
             raise ValueError("Test set complete")
         self.testcases.append(testcase)
 
-    def run(self, proj_dir: Path, bin_dir: Path, timeout: float):
+    def run(self, proj_dir: Path, bin_dir: Path, timeout: float, debug: bool = False):
         if self.complete:
             raise ValueError("Test set complete")
         log_len = len(str(len(self.testcases)))
@@ -329,10 +389,11 @@ class TestSet:
                 f"\rRunning testcase | {i + 1:{log_len}}/{len(self.testcases):<{log_len}} | {testcase.name:>20} | ".ljust(
                     30
                 ),
-                end="",
+                end="" if not debug else "\n",
             )
-            testcase.run(proj_dir, bin_dir, timeout)
-            print(f"{testcase.status.name:>10} | {testcase.time:.2f}s")
+            testcase.run(proj_dir, bin_dir, timeout, debug=debug)
+            if not debug:
+                print(f"{testcase.status.name:>10} | {testcase.time:.2f}s")
         self.complete = True
         print(" " * (os.get_terminal_size().columns - 2) + "\r", end="")
         print("All testcases complete")

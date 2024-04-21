@@ -35,7 +35,9 @@ def create(args: CreateArgs):
         print(e)
         sys.exit(1)
 
-    testcase_dir = Path("./testcases") / (testcase_name.lower().replace(" ", "-"))
+    testcase_dir = Path("./testcases").resolve(strict=True) / (
+        testcase_name.lower().replace(" ", "-")
+    )
     if testcase_dir.exists():
         print("Testcase already exists")
         sys.exit(1)
