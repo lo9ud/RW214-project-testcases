@@ -1,4 +1,5 @@
 import json
+import os
 import subprocess
 import time
 from pathlib import Path
@@ -216,19 +217,33 @@ class Testcase:
                 self.time = time.perf_counter() - start_time
 
             if p.returncode != 0:
-                self.err = p.stderr.read().decode() if p.stderr else "Unknown error"
-                self.out = p.stdout.read().decode() if p.stdout else "Unknown error"
                 self.status = Status.ERROR
-                return
 
-            with open(expected_path, "r", encoding="utf-8") as out, open(
-                input_path, "r", encoding="utf-8"
-            ) as _input, open(results_path, "r", encoding="utf-8") as rec:
-                results[context["direction"]]["input"] = _input.read()
-                results[context["direction"]]["expected"] = out.read()
-                results[context["direction"]]["recieved"] = rec.read()
-            p.wait()
-            results_path.unlink()
+            self.err = p.stderr.read().decode() if p.stderr else "Unknown error"
+            self.out = p.stdout.read().decode() if p.stdout else "Unknown error"
+
+            try:
+                with open(expected_path, "r", encoding="utf-8") as out, open(
+                    input_path, "r", encoding="utf-8"
+                ) as _input, open(results_path, "r", encoding="utf-8") as rec:
+                    results[context["direction"]]["input"] = _input.read()
+                    results[context["direction"]]["expected"] = out.read()
+                    results[context["direction"]]["recieved"] = rec.read()
+            except UnicodeDecodeError:
+                self.status = Status.ERROR
+                results[context["direction"]]["input"] = "UnicodeDecodeError"
+                results[context["direction"]]["expected"] = "UnicodeDecodeError"
+                results[context["direction"]]["recieved"] = "UnicodeDecodeError"
+                return
+            except FileNotFoundError:
+                self.status = Status.ERROR
+                results[context["direction"]]["input"] = "File not found"
+                results[context["direction"]]["expected"] = "File not found"
+                results[context["direction"]]["recieved"] = "File not found"
+                return
+            finally:
+                p.wait()
+                results_path.unlink()
 
         self.result = self.TestResult(
             input_afr=results["t2b"]["input"],
@@ -238,14 +253,15 @@ class Testcase:
             recieved_afr=results["b2t"]["recieved"],
             expected_afr=results["b2t"]["expected"],
         )
-        self.status = (
-            Status.PASSED
-            if (
-                self.result.get_status(Direction.B2T) == Status.PASSED
-                and self.result.get_status(Direction.T2B) == Status.PASSED
+        if self.status == Status.COMPLETE:
+            self.status = (
+                Status.PASSED
+                if (
+                    self.result.get_status(Direction.B2T) == Status.PASSED
+                    and self.result.get_status(Direction.T2B) == Status.PASSED
+                )
+                else Status.FAILED
             )
-            else Status.FAILED
-        )
 
 
 class TestSet:
@@ -316,8 +332,10 @@ class TestSet:
                 end="",
             )
             testcase.run(proj_dir, bin_dir, timeout)
-            print("Done!")
+            print(f"{testcase.status.name:>10} | {testcase.time:.2f}s")
         self.complete = True
+        print(" " * (os.get_terminal_size().columns - 2) + "\r", end="")
+        print("All testcases complete")
 
     def summary(self, args: TestArgs) -> "dict[str, int | float]":
         if not self.complete:

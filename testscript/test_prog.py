@@ -13,6 +13,25 @@ def test(args: TestArgs):
     src_dir = proj_dir / "src"
     bin_dir = Path.cwd() / "bin"
 
+    if not proj_dir.exists():
+        print("The provided path does not exist.")
+        print("Provided path:", proj_dir)
+        return
+
+    elif not proj_dir.stem.endswith("-RW214-project"):
+        print("The provided path does not appear to be a valid project directory.")
+        print(
+            "Ensure the directory name ends with '-RW214-project'.\n\tFor example, '123456789-RW214-project'."
+        )
+        print("Provided path:", proj_dir)
+        return
+
+    if not all(proj_dir / ext for ext in ["src", "bin", "out"]):
+        print("The provided path does not appear to be a valid project directory.")
+        print("Ensure the directory contains 'src', 'bin', and 'out' subdirectories.")
+        print("Provided path:", proj_dir)
+        return
+
     print(
         TableMaker(
             [
@@ -32,7 +51,6 @@ def test(args: TestArgs):
             "-d",
             bin_dir,
             "-Xlint",
-            "-Xdoclint:all",
         ],
         cwd=proj_dir,
         stderr=subprocess.PIPE,
@@ -48,9 +66,8 @@ def test(args: TestArgs):
                 or "warnings" in line
                 or "error" in line
                 or "warning" in line
-            ):
+            ) and args.debug:
                 print(f"  {line}")
-                break
         else:
             print("No warnings")
 
@@ -74,6 +91,10 @@ def test(args: TestArgs):
     testcases.run(proj_dir, bin_dir, args.timeout)
     print("Done")
 
-    print(TableFormatter().format(testcases, args.show_passing, args.details))
+    print(
+        TableFormatter().format(
+            testcases, args.show_passing, args.details, args.error_output
+        )
+    )
 
     subprocess.run(["rm", "-rf", bin_dir], check=True)

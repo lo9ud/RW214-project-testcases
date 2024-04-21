@@ -1,5 +1,6 @@
 import difflib
 import enum
+import re
 from typing import Literal
 
 COLOR_ENABLED = True
@@ -72,6 +73,11 @@ def colorize(text: str, color: Literal["red", "green"], omit_ends: bool = False)
         return text
 
 
+class ColoredString(str):
+    def __len__(self) -> int:
+        return len(re.sub(r"\x1b\[[0-9;]*?m", "", self))
+
+
 def ex_v_fd(ex: str, fd: str) -> "tuple[str, str]":
     ex = ex.replace("\r\n", "\n").replace("\n", r"\n")
     fd = fd.replace("\r\n", "\n").replace("\n", r"\n")
@@ -102,7 +108,8 @@ def ex_v_fd(ex: str, fd: str) -> "tuple[str, str]":
                 ),
             )
 
-    a, b = get_match(ex, fd)
-    if COLOR_ENABLED:
-        return (a + bcolor.ENDC.value, b + bcolor.ENDC.value)
+    a, b = (
+        ColoredString(x + (bcolor.ENDC.value if COLOR_ENABLED else ""))
+        for x in get_match(ex, fd)
+    )
     return (a, b)

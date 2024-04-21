@@ -5,7 +5,7 @@ try:
     from tabulate import tabulate
 
     def _tabulate(tabular_data: "list[list[Any]]") -> str:  # type: ignore
-        return tabulate(tabular_data, tablefmt="fancy_grid")
+        return tabulate(tabular_data, tablefmt="fancy_grid") + "\n"
 
     TABULATE_ENABLED = True  # type: ignore
 except ImportError:
@@ -20,9 +20,12 @@ except ImportError:
 
 def custom_tabulate(tabular_data: "list[list[Any]]"):
     col_widths = [max(len(str(cell)) for cell in col) for col in zip(*tabular_data)]
-    return "\n".join(
-        " | ".join(f"{str(cell):<{col_widths[i]}}" for i, cell in enumerate(row))
-        for row in tabular_data
+    return (
+        "\n".join(
+            " | ".join(f"{str(cell):<{col_widths[i]}}" for i, cell in enumerate(row))
+            for row in tabular_data
+        )
+        + "\n"
     )
 
 
