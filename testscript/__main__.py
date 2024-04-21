@@ -7,11 +7,21 @@ import main
 
 if __name__ == "__main__":
     _args, parser = args.get_args(sys.argv[1:])
-    if pathlib.Path.cwd().name == "RW214-project-testcases":
-        main.main(_args, parser)
-    elif pathlib.Path.cwd().name in ["testscript", "testcases"]:
+    attempts = 0
+    cwd = pathlib.Path.cwd()
+    while attempts < 5 and not (pathlib.Path.cwd().name == "RW214-project-testcases"):
+        if os.path.exists("RW214-project-testcases"):
+            os.chdir("RW214-project-testcases")
+            break
         os.chdir("..")
-        main.main(*args.get_args(sys.argv[1:]))
-    else:
-        print("Please run this script from the 'RW214-project-testcases' root")
+        attempts += 1
+    if attempts == 5:
+        print("Could not find the 'RW214-project-testcases' directory.")
         sys.exit(1)
+    elif attempts > 0:
+        print("Moved up", attempts, "directories.")
+        print("Please ensure you are running this program from the correct directory.")
+        print("Initial working directory:", cwd)
+        print("Current working directory:", pathlib.Path.cwd())
+
+    main.main(_args, parser)
