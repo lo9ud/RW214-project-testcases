@@ -43,7 +43,7 @@ def test(args: TestArgs):
     )
 
     # Build the project
-    print("Building project...", end=" ")
+    print("Building project...")
     p = subprocess.Popen(
         args=[
             "javac",
@@ -55,26 +55,44 @@ def test(args: TestArgs):
         cwd=proj_dir,
         stderr=subprocess.PIPE,
     )
-    p.wait()
-    print("Done")
+    total_compiled = 0
+    while (
+        total_compiled < 24
+    ):  # Try to compile 24 times 5 seconds each = 2 minutes total allowed time
+        try:
+            p.wait(timeout=5)
+            if args.debug:
+                print("Build successful")
+            break
+        except subprocess.TimeoutExpired:
+            total_compiled += 1
+            print("Compiling... ", end="")
+        print("Build failed, please check your code and try again.")
+        return
+    if p.returncode != 0:
+        print("Build failed, please check your code and try again.")
+        return
     out = None
     if p.stderr:
-        out = p.stderr.read().decode("utf-8").splitlines()
-        for line in out:
-            if (
-                "errors" in line
-                or "warnings" in line
-                or "error" in line
-                or "warning" in line
-            ) and args.debug:
-                print(f"  {line}")
+        out = p.stderr.read().decode("utf-8")
+        if args.debug:
+            print(out)
         else:
-            print("No warnings")
+            for line in out.splitlines():
+                if (
+                    "errors" in line
+                    or "warnings" in line
+                    or "error" in line
+                    or "warning" in line
+                ) and args.debug:
+                    print(f"  {line}")
+            else:
+                print("No warnings")
 
     if p.returncode != 0:
         print("Build failed")
         return
-    testcase_dir = Path("./testcases")
+    testcase_dir = Path("./testcases").resolve(strict=True)
     if not proj_dir.exists():
         raise FileNotFoundError("Project directory not found")
     testcases: TestSet = TestSet()
@@ -82,14 +100,15 @@ def test(args: TestArgs):
         if not testcase_folder.is_dir():
             continue
         try:
+            if args.debug:
+                print(f"Adding {testcase_folder}")
             testcases.add(Testcase(testcase_folder))
         except TestError as e:
             print(f"Skipping {testcase_folder}: {e}")
             continue
 
     print("Running testcases...")
-    testcases.run(proj_dir, bin_dir, args.timeout)
-    print("Done")
+    testcases.run(proj_dir, bin_dir, args.timeout, debug=args.debug)
 
     print(
         TableFormatter().format(
