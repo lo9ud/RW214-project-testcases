@@ -242,9 +242,13 @@ class Testcase:
                     print("Subprocess complete")
                 self.time = time.perf_counter() - start_time
                 if debug:
-                    print("Time taken: ", self.time)
-                    print("stdout:\n", self.out)
-                    print("stderr:\n", self.err)
+                    print(f"Time taken: {self.time:.3f}s")
+                    print(
+                        "stdout:\n", self.out if not self.out.isspace() else "No output"
+                    )
+                    print(
+                        "stderr:\n", self.err if not self.err.isspace() else "No output"
+                    )
 
             if debug:
                 print("Checking subprocess return code")
