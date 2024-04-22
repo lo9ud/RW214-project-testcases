@@ -9,11 +9,11 @@ Shared testcases for the 2024 RW214 project.
 Suggested installation location is adjacent to the project directory. i.e.)
 ```
 your/path/to/
-    RW214-project-testcases/
+    RW214-project-testcases/ (This repository)
       |--- testscript/
       |--- testcases/
       |--- ...
-    <student-number>-RW214-project/
+    <student-number>-RW214-project/ (Your project directory)
       |--- src/
       |--- bin/
       |--- ...
@@ -22,15 +22,24 @@ your/path/to/
 Run all commands in terminal
 ```mermaid
 graph TD
-    Clone["Clone the repository
-    git clone https://github.com/lo9ud/RW214-project-testcases.git "]
-    Locate["Locate project folder path
-    your/path/to/RW214-project-testcases"]
-    Run["Run the test script
-    python testscript test #quot;your/path/to/project#quot;"]
-    Clone --> Locate --> Run
+    Clone["`Clone the repository
+
+**git&nbsp;clone&nbsp;https://github.com/lo9ud/RW214&#8209;project#8209;testcases.git**`"]
+    CD["`Change directory to the test script repository
+
+**cd&nbsp;RW214#8209;project#8209;testcases**`"]
+    Locate["`Locate project folder path
+
+**your/path/to/RW214#8209;project#8209;testcases**`"]
+    Run["`Run the test script
+
+**python&nbsp;testscript&nbsp;test&nbsp;#quot;your/path/to/project#quot;**`"]
+    Clone --> CD --> Locate --> Run
 ```
 If you are a basic user, you do not need to install any additional packages, nor do you need to read any more of this README. You can simply follow the instructions above to run the test script.
+
+>*Note: you are in fact running the <b>folder</b> `/testscript/` as a script. This is normal.* ___THIS IS INTENDED BEHAVIOUR.___ *Do not add `.py`, `/test.py`, or any other suffix to the command.*
+
 #### For developers and more advanced users
 ```
 % user@machine:~$ python testscript -h
