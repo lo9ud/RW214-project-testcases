@@ -9,12 +9,11 @@ assignees: ''
 
 **New testcase:**
 
-Name         | [name]
+Name        | [name]
 ------------|-----------
 Description | [desc]
-Level          | [level]
-Direction    | [direction]
-Tags           | [tags]
+Level       | [level]
+Tags        | [tags]
 
 **Afr:**
 // Afrikaans goes here...
