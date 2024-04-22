@@ -38,6 +38,8 @@ graph TD
 ```
 If you are a basic user, you do not need to install any additional packages, nor do you need to read any more of this README. You can simply follow the instructions above to run the test script.
 
+For better result tabulation, you can install `tabulate` by running `pip install tabulate` or `pip install -r requirements.txt` in the main directory.
+
 >*Note: you are in fact running the <b>folder</b> `/testscript/` as a script. This is normal.* ___THIS IS INTENDED BEHAVIOUR.___ *Do not add `.py`, `/test.py`, or any other suffix to the command.*
 
 #### For developers and more advanced users
