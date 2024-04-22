@@ -1,6 +1,6 @@
 # Contributing
 
-Please create a new branch for your changes and make a pull request to the `main` branch.
+Please create a new branch for your changes and make a pull request to the `main` branch, or open a new issue using the correct template.
 ## Workflow
 ```mermaid
 flowchart TD
