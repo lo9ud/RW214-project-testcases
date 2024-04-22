@@ -3,14 +3,26 @@ from pathlib import Path
 from typing import Final
 
 ##########################################################
-VERSION_NUMBER: Final["tuple[int, int, int]"] = (0, 3, 0)
+VERSION_NUMBER: Final["tuple[int, int, int, str]"] = (1, 0, 0, "")
 
-VERSION_STR: Final[str] = ".".join(str(x) for x in VERSION_NUMBER)
+VERSION_STR: Final[str] = ".".join(str(x) for x in VERSION_NUMBER[:3]) + (
+    ("-" + VERSION_NUMBER[3]) if VERSION_NUMBER[3] else ""
+)
 ##########################################################
+
+LONG_DESC = """
+Test script for the RW214 Braille-Afrikaans Translator project.
+
+This script is used to test the project and a set of provided testcases.
+If you are new to this project, please read the README.md file before using this script.
+Else, for simple use you may use the 'test' action to run the testcases as follows:
+    python testscript test <project_directory>
+"""
 
 
 def get_args(args: "list[str]") -> "tuple[argparse.Namespace, argparse.ArgumentParser]":
     parser = argparse.ArgumentParser(
+        prog="rw214-testscript",
         description="Test script for the RW214 Braille-Afrikaans Translator project",
     )
     parser.add_argument(
@@ -39,14 +51,18 @@ def get_args(args: "list[str]") -> "tuple[argparse.Namespace, argparse.ArgumentP
 
     parser.add_argument(
         "--debug",
-        help="Enable debug output",
+        help="Enable debug output (for developers only, use at own risk)",
         action="store_true",
         default=False,
     )
     subparsers = parser.add_subparsers(help="Action", dest="action")
 
-    test_parser = subparsers.add_parser("test", help="Run tests")
-    test_parser.add_argument("proj", type=str, help="project directory")
+    test_parser = subparsers.add_parser("test", help="Run tests against project")
+    test_parser.add_argument(
+        "proj_dir",
+        type=str,
+        help="your project directory (your/path/to/<student_number>-RW214-project)",
+    )
     test_parser.add_argument(
         "-t",
         "--timeout",
@@ -69,20 +85,24 @@ def get_args(args: "list[str]") -> "tuple[argparse.Namespace, argparse.ArgumentP
     output_group.add_argument(
         "-d",
         "--details",
-        help="Show details of testcases",
+        help="Show details of testcases (name, level, tags) in detail views (may produce a lot of output)",
         action="store_true",
         default=False,
     )
     output_group.add_argument(
         "--show-passing",
-        help="Show passing testcases in detail views",
+        help="Show passing testcases in detail views (may produce a lot of output)",
         action="store_true",
         default=False,
     )
 
-    subparsers.add_parser("validate", help="Validate testcases")
+    subparsers.add_parser(
+        "validate", help="Validate testcases structure, but do not run tests"
+    )
 
-    create_parser = subparsers.add_parser("create", help="Create a new testcase")
+    create_parser = subparsers.add_parser(
+        "create", help="Create a new testcase interactively or through arguments"
+    )
     create_parser.add_argument("-n", "--name", type=str, help="Name of the testcase")
     create_parser.add_argument(
         "-i", "--info", type=str, help="Description of the testcase"
