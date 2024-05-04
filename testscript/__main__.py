@@ -23,5 +23,10 @@ if __name__ == "__main__":
         print("Please ensure you are running this program from the correct directory.")
         print("Initial working directory:", cwd)
         print("Current working directory:", pathlib.Path.cwd())
-
-    main.main(_args, parser)
+    try:
+        main.main(_args, parser)
+    except Exception as e:
+        print("An unhandled error occurred:", e)
+        if hasattr(_args, "debug") and _args.debug:
+            raise
+        sys.exit(1)
