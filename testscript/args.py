@@ -155,3 +155,32 @@ class CreateArgs(ArgsWrapper):
         self.info: str = args.info
         self.level: str = args.level
         self.tags: list[str] = args.tags
+
+
+if __name__ == "__main__":
+    test_args = [
+        "test",
+        "path/to/project",
+        "-t",
+        "10",
+        "-e",
+        "--details",
+        "--show-passing",
+    ]
+    create_args = [
+        "create",
+        "-n",
+        "testcase_name",
+        "-i",
+        "testcase_info",
+        "-l",
+        "testcase_level",
+    ]
+    validate_args = [
+        "validate",
+    ]
+    for args in [test_args, create_args, validate_args]:
+        _args, parser = get_args(args)
+        print(_args)
+        print()
+    print("Done")
