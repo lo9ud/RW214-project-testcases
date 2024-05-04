@@ -122,4 +122,16 @@ def test(args: TestArgs):
         )
     )
 
-    subprocess.run(["rm", "-rf", bin_dir], check=True)
+    def rec_del(p: Path):
+        for f in p.iterdir():
+            if f.is_dir():
+                rec_del(f)
+                f.rmdir()
+            else:
+                if p.name == ".gitkeep":
+                    continue
+                if args.debug:
+                    print(f"Deleting {f}")
+                f.unlink()
+
+    rec_del(bin_dir)
